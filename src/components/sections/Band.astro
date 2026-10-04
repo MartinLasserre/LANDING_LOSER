@@ -1,0 +1,179 @@
+---
+/**
+ * 01 — Banda. Composición editorial: statement gigante que se "lee" con el
+ * scroll, fotografía que sangra fuera del viewport y texto con parallax
+ * diferencial (imagen / texto / tipografía de fondo).
+ */
+import { siteData } from '@/data/site';
+import Photo from '@/components/ui/Photo.astro';
+import SectionMeta from '@/components/ui/SectionMeta.astro';
+
+const { band, photos, sections } = siteData;
+const copy = sections.band;
+const facts = [
+  { label: 'Ciudad', value: band.city },
+  { label: 'Género', value: band.genre },
+  { label: 'Desde', value: band.foundedYear },
+].filter((f): f is { label: string; value: string } => f.value !== null);
+---
+
+<section id="banda" class="band" data-section="banda" data-section-index={copy.index} data-section-label="Banda" data-atmosphere="0.6" aria-labelledby="band-title">
+  <p class="band__ghost t-display t-outline" aria-hidden="true" data-parallax-x="-0.2">
+    {band.nameParts[1]}
+  </p>
+
+  <div class="band__grid grid-12 wrap">
+    <header class="band__header">
+      <SectionMeta index={copy.index} label="Banda" />
+      <h2 id="band-title" class="band__title t-title" data-reveal>{copy.title}</h2>
+      <p class="t-meta band__intro" data-reveal>{copy.intro}</p>
+    </header>
+
+    <p class="band__statement t-headline" data-scrub-words>{band.statement}</p>
+
+    <div class="band__media" data-parallax="-0.1">
+      <Photo
+        photo={photos.band}
+        figure={copy.index}
+        sizes="(min-width: 64rem) 40vw, 82vw"
+        data-reveal-clip
+      />
+    </div>
+
+    <div class="band__copy" data-parallax="0.06">
+      <p class="t-lead" data-reveal>{band.bio}</p>
+      {band.bioExtended && <p class="t-body" data-reveal>{band.bioExtended}</p>}
+      {
+        facts.length > 0 && (
+          <dl class="band__facts" data-reveal>
+            {facts.map((f) => (
+              <div>
+                <dt class="t-meta">{f.label}</dt>
+                <dd class="t-subtitle">{f.value}</dd>
+              </div>
+            ))}
+          </dl>
+        )
+      }
+    </div>
+
+    <p class="band__side t-micro t-vertical" aria-hidden="true">
+      {band.name} — {band.closingLine}
+    </p>
+  </div>
+</section>
+
+<style>
+  .band {
+    position: relative;
+    padding-block: var(--space-2xl) var(--space-lg);
+    overflow-x: clip;
+  }
+
+  .band__ghost {
+    position: absolute;
+    inset-block-start: 14%;
+    inset-inline-start: 30%;
+    z-index: -1;
+    white-space: nowrap;
+    font-size: clamp(8rem, 34vw, 34rem);
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  .band__grid {
+    row-gap: var(--space-lg);
+    align-items: start;
+  }
+
+  .band__header {
+    grid-column: 1 / -1;
+    display: grid;
+    gap: var(--space-sm);
+  }
+
+  .band__title {
+    color: var(--color-glow);
+  }
+
+  .band__statement {
+    grid-column: 1 / -1;
+    font-size: clamp(3rem, 12.5vw, 12.5rem);
+    line-height: 0.84;
+  }
+
+  .band__media {
+    grid-column: 3 / -1;
+    margin-inline-end: calc(var(--gutter) * -1);
+    position: relative;
+  }
+
+  .band__media :global(.photo__caption) {
+    padding-inline-end: var(--gutter);
+  }
+
+  .band__copy {
+    grid-column: 1 / -1;
+    display: grid;
+    gap: var(--space-md);
+  }
+
+  .band__facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-md) var(--space-lg);
+    padding-block-start: var(--space-sm);
+    border-block-start: 1px solid var(--color-line);
+  }
+
+  .band__facts dd {
+    margin: 0;
+  }
+
+  .band__side {
+    display: none;
+  }
+
+  @media (min-width: 64rem) {
+    .band__header {
+      grid-column: 1 / 5;
+    }
+
+    .band__statement {
+      grid-column: 1 / 11;
+      margin-block-start: var(--space-md);
+    }
+
+    .band__media {
+      grid-column: 7 / -1;
+      grid-row: 3 / span 2;
+      margin-block-start: calc(var(--space-xl) * -1);
+    }
+
+    .band__copy {
+      grid-column: 2 / 6;
+      grid-row: 3;
+      margin-block-start: var(--space-lg);
+    }
+
+    .band__side {
+      display: block;
+      grid-column: 12;
+      grid-row: 1;
+      justify-self: end;
+    }
+  }
+
+  /* La foto original mide 682px: limitar su ancho evita escalarla de más. */
+  @media (min-width: 90rem) {
+    .band__media {
+      grid-column: 8 / -1;
+    }
+  }
+
+  @media (min-width: 120rem) {
+    .band__media {
+      grid-column: 9 / -1;
+    }
+  }
+</style>

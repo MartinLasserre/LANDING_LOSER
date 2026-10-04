@@ -1,0 +1,177 @@
+---
+import { siteData } from '@/data/site';
+import type { SectionId } from '@/types/content';
+
+const { band, navigation, sections } = siteData;
+
+const indexByTarget: Partial<Record<SectionId, string>> = {
+  banda: sections.band.index,
+  archivo: sections.archive.index,
+  musica: sections.music.index,
+  shows: sections.shows.index,
+  contacto: sections.contact.index,
+};
+---
+
+<header class="site-header" data-site-header>
+  <a href="#inicio" class="site-header__logo" aria-label={`${band.name}, volver al inicio`} data-nav-link="inicio">
+    {band.shortName}
+  </a>
+
+  <p class="site-header__now t-micro" aria-hidden="true">
+    <span class="t-num" data-nav-now-index>00</span>
+    <span data-nav-now-label>Inicio</span>
+  </p>
+
+  <nav class="site-header__nav" aria-label="Principal">
+    <ul role="list">
+      {
+        navigation.map((item) => (
+          <li>
+            <a href={`#${item.target}`} class="site-header__link" data-nav-link={item.target}>
+              <span class="site-header__num t-num" aria-hidden="true">
+                {indexByTarget[item.target]}
+              </span>
+              <span class="site-header__label">{item.label}</span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </nav>
+
+  <!-- Control global de audio: aparece cuando hay un track cargado. -->
+  <button type="button" class="site-header__audio" data-mini-toggle hidden aria-label="Pausar">
+    <span class="eq" aria-hidden="true"><i></i><i></i><i></i></span>
+    <span class="site-header__audio-label t-micro" data-mini-label>Pausa</span>
+  </button>
+
+  <span class="site-header__progress" data-nav-progress aria-hidden="true"></span>
+</header>
+
+<style>
+  .site-header {
+    position: fixed;
+    inset: 0 0 auto;
+    z-index: var(--z-nav);
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    block-size: var(--nav-height);
+    padding-inline: var(--gutter);
+    padding-block-start: env(safe-area-inset-top, 0);
+    color: var(--color-bone);
+    /* Legible sobre fotos y humo sin necesitar un fondo opaco. */
+    mix-blend-mode: difference;
+  }
+
+  .site-header__logo {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-stretch: 62%;
+    font-size: 1.5rem;
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+
+  .site-header__now {
+    display: none;
+    gap: 0.75em;
+    color: inherit;
+    opacity: 0.7;
+  }
+
+  .site-header__nav {
+    margin-inline-start: auto;
+  }
+
+  .site-header__nav ul {
+    display: flex;
+    gap: clamp(0.9rem, 2.4vw, 2.5rem);
+  }
+
+  .site-header__link {
+    position: relative;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.45em;
+    padding-block: 0.75rem;
+    font-family: var(--font-mono);
+    font-size: var(--fs-micro);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .site-header__num {
+    display: none;
+    opacity: 0.55;
+  }
+
+  /* Indicador de sección activa: línea que se dibuja debajo. */
+  .site-header__link::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0.45rem;
+    block-size: 1px;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: transform var(--dur-slow) var(--ease-out);
+  }
+
+  .site-header__link:hover::after,
+  .site-header__link[aria-current='true']::after {
+    transform: scaleX(1);
+    transform-origin: left;
+  }
+
+  .site-header__audio {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    padding: 0.5rem 0;
+  }
+
+  .site-header__audio[hidden] {
+    display: none;
+  }
+
+  .site-header__audio-label {
+    color: inherit;
+  }
+
+  .site-header__progress {
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    block-size: 1px;
+    background: currentColor;
+    opacity: 0.5;
+    transform: scaleX(var(--progress, 0));
+    transform-origin: left;
+  }
+
+  @media (min-width: 48rem) {
+    .site-header__link {
+      font-size: var(--fs-meta);
+      letter-spacing: var(--tracking-meta);
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .site-header__now {
+      display: inline-flex;
+    }
+
+    .site-header__num {
+      display: inline;
+    }
+  }
+
+  @media (max-width: 30rem) {
+    .site-header__audio-label {
+      display: none;
+    }
+  }
+</style>

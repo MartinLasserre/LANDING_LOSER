@@ -1,0 +1,199 @@
+---
+/**
+ * 05 — Contacto. Reemplaza el viejo <form action="mailto:"> (frágil: depende
+ * de un cliente de correo y enviaba text/plain) por un CTA directo con
+ * botón de copiar. Sin backend ni servicios externos.
+ */
+import { siteData } from '@/data/site';
+import SectionMeta from '@/components/ui/SectionMeta.astro';
+
+const { sections, contact, contactCopy, socialLinks } = siteData;
+const copy = sections.contact;
+const channels = [
+  { label: 'Booking', value: contact.booking },
+  { label: 'Prensa', value: contact.press },
+].filter((c): c is { label: string; value: string } => c.value !== null);
+const isEmail = (v: string) => v.includes('@');
+---
+
+<section id="contacto" class="contact wrap" data-section="contacto" data-section-index={copy.index} data-section-label={copy.title} data-atmosphere="0.4" aria-labelledby="contact-title">
+  <header class="contact__head">
+    <SectionMeta index={copy.index} label={copy.title} />
+    <h2 id="contact-title" class="contact__title t-headline" data-reveal>{copy.intro}</h2>
+  </header>
+
+  <div class="contact__body">
+    {
+      contact.email ? (
+        <div class="contact__cta" data-reveal>
+          <p class="t-meta">{contactCopy.cta}</p>
+          <a class="contact__email link-line" href={`mailto:${contact.email}`}>
+            {contact.email}
+          </a>
+          <button type="button" class="btn" data-copy={contact.email}>
+            <span class="btn__label" data-copy-label>
+              Copiar email
+            </span>
+          </button>
+          <span class="visually-hidden" role="status" data-copy-status />
+        </div>
+      ) : (
+        <div class="contact__cta contact__cta--pending" data-reveal>
+          <p class="t-meta">{contactCopy.cta}</p>
+          <p class="contact__email contact__email--pending">Email: próximamente</p>
+        </div>
+      )
+    }
+
+    {
+      channels.length > 0 && (
+        <dl class="contact__channels" data-reveal>
+          {channels.map((c) => (
+            <div>
+              <dt class="t-meta">{c.label}</dt>
+              <dd>
+                {isEmail(c.value) ? (
+                  <a class="link-line" href={`mailto:${c.value}`}>
+                    {c.value}
+                  </a>
+                ) : (
+                  c.value
+                )}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      )
+    }
+
+    <ul class="socials" role="list" aria-label="Redes" data-reveal-group>
+      {
+        socialLinks.map((link) => (
+          <li class="socials__item">
+            {link.href ? (
+              <a class="socials__link" href={link.href} target="_blank" rel="noopener">
+                <span class="link-line">{link.label}</span>
+                <span aria-hidden="true">↗</span>
+                <span class="visually-hidden"> (abre en otra pestaña)</span>
+              </a>
+            ) : (
+              <span class="socials__link socials__link--pending">
+                <span>{link.label}</span>
+                <span class="t-micro">pronto</span>
+              </span>
+            )}
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>
+
+<style>
+  .contact {
+    position: relative;
+    display: grid;
+    gap: var(--space-lg);
+    padding-block: var(--space-2xl) var(--space-xl);
+  }
+
+  .contact__head {
+    display: grid;
+    gap: var(--space-md);
+  }
+
+  .contact__title {
+    font-size: clamp(3rem, 10vw, 9.5rem);
+    max-inline-size: 11ch;
+  }
+
+  @media (min-width: 64rem) {
+    .contact__title {
+      font-size: clamp(4rem, 7vw, 9rem);
+    }
+  }
+
+  .contact__body {
+    display: grid;
+    gap: var(--space-lg);
+  }
+
+  .contact__cta {
+    display: grid;
+    justify-items: start;
+    gap: var(--space-sm);
+  }
+
+  .contact__email {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-stretch: 75%;
+    font-size: clamp(1.75rem, 5vw, 4rem);
+    line-height: 1;
+    overflow-wrap: anywhere;
+  }
+
+  .contact__email--pending {
+    color: var(--color-muted);
+  }
+
+  .contact__channels {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-md) var(--space-lg);
+  }
+
+  .contact__channels dd {
+    margin: 0;
+  }
+
+  .socials {
+    display: grid;
+    border-block-start: 1px solid var(--color-line);
+  }
+
+  .socials__item {
+    border-block-end: 1px solid var(--color-line);
+  }
+
+  .socials__link {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--space-sm);
+    padding-block: var(--space-sm);
+    font-family: var(--font-display);
+    font-stretch: 75%;
+    font-weight: 600;
+    font-size: var(--fs-subtitle);
+    text-transform: uppercase;
+    line-height: 1;
+    transition: padding var(--dur-base) var(--ease-out);
+  }
+
+  @media (hover: hover) {
+    a.socials__link:hover {
+      padding-inline-start: 0.4em;
+    }
+  }
+
+  .socials__link--pending {
+    color: var(--color-muted);
+  }
+
+  @media (min-width: 64rem) {
+    .contact {
+      grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+      column-gap: var(--space-xl);
+      align-items: end;
+    }
+
+    .contact__head {
+      grid-column: 1;
+    }
+
+    .contact__body {
+      grid-column: 2;
+    }
+  }
+</style>

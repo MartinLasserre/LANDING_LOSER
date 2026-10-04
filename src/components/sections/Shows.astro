@@ -1,0 +1,255 @@
+---
+/**
+ * 04 — Shows. Tratamiento de cartel de recital: fechas gigantes, ciudad
+ * condensada, lugar en mono. Sin fechas cargadas → estado vacío tipo afiche.
+ */
+import { siteData } from '@/data/site';
+import { parseShowDate } from '@/lib/content/format';
+import type { ShowStatus } from '@/types/content';
+import SectionMeta from '@/components/ui/SectionMeta.astro';
+
+const { sections, shows, showsEmpty, meta, socialLinks } = siteData;
+const copy = sections.shows;
+
+const statusLabel: Record<ShowStatus, string> = {
+  available: 'Entradas',
+  'sold-out': 'Agotado',
+  free: 'Gratis',
+  tba: 'Próximamente',
+};
+
+const rows = [...shows]
+  .sort((a, b) => a.date.localeCompare(b.date))
+  .map((show) => ({ ...show, when: parseShowDate(show.date, meta.lang) }));
+const follow = socialLinks.filter((l): l is typeof l & { href: string } => l.href !== null);
+---
+
+<section id="shows" class="shows" data-section="shows" data-section-index={copy.index} data-section-label={copy.title} data-atmosphere="0.5" aria-labelledby="shows-title">
+  <div class="shows__poster wrap">
+    <header class="shows__head">
+      <SectionMeta index={copy.index} label="En vivo" />
+      <h2 id="shows-title" class="shows__title t-headline" data-reveal>{copy.title}</h2>
+      <p class="shows__intro t-subtitle" data-reveal>{copy.intro}</p>
+    </header>
+
+    {
+      rows.length > 0 ? (
+        <ol class="shows__list" role="list" data-reveal-group>
+          {rows.map((show) => (
+            <li class:list={['show', { 'show--past': show.when.isPast }]}>
+              <time class="show__date" datetime={show.date}>
+                <span class="show__day t-num">{show.when.day}</span>
+                <span class="show__month t-meta">
+                  {show.when.month} {show.when.year}
+                </span>
+                <span class="visually-hidden">{show.when.long}</span>
+              </time>
+              <h3 class="show__city t-title">{show.city}</h3>
+              <p class="show__venue t-meta">{show.venue}</p>
+              <p class="show__action">
+                {show.ticketUrl && show.status === 'available' && !show.when.isPast ? (
+                  <a class="btn" href={show.ticketUrl} target="_blank" rel="noopener">
+                    <span class="btn__label">
+                      {statusLabel.available} →
+                      <span class="visually-hidden">
+                        {' '}
+                        para {show.city}, {show.when.long} (abre en otra pestaña)
+                      </span>
+                    </span>
+                  </a>
+                ) : (
+                  <span class="t-meta show__status">{show.when.isPast ? 'Pasó' : statusLabel[show.status]}</span>
+                )}
+              </p>
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <div class="shows__empty" data-reveal-group>
+          <p class="shows__empty-title t-display">{showsEmpty.title}</p>
+          <p class="shows__empty-sub t-meta">{showsEmpty.subtitle}</p>
+          {follow.length > 0 && (
+            <p class="t-micro shows__follow">
+              Novedades en{' '}
+              {follow.map((l, i) => (
+                <>
+                  {i > 0 && ' · '}
+                  <a class="link-line" href={l.href} target="_blank" rel="noopener">
+                    {l.label}
+                  </a>
+                </>
+              ))}
+            </p>
+          )}
+        </div>
+      )
+    }
+  </div>
+</section>
+
+<style>
+  .shows {
+    position: relative;
+    padding-block: var(--space-xl);
+  }
+
+  .shows__poster {
+    display: grid;
+    gap: var(--space-lg);
+  }
+
+  .shows__head {
+    display: grid;
+    gap: var(--space-sm);
+  }
+
+  .shows__title {
+    font-size: clamp(4.5rem, 24vw, 24rem);
+    line-height: 0.78;
+    color: var(--color-blood);
+    margin-inline-start: -0.04em;
+  }
+
+  .shows__intro {
+    font-stretch: 75%;
+  }
+
+  /* ── Filas ─────────────────────────────────────────── */
+  .shows__list {
+    border-block-start: 2px solid var(--color-bone);
+  }
+
+  .show {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      'date city'
+      'date venue'
+      'date action';
+    column-gap: var(--space-md);
+    row-gap: var(--space-3xs);
+    align-items: baseline;
+    padding-block: var(--space-md);
+    border-block-end: 1px solid var(--color-line-strong);
+  }
+
+  .show::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: -1px;
+    block-size: 1px;
+    background: var(--color-neon);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform var(--dur-slow) var(--ease-out);
+  }
+
+  .show__date {
+    grid-area: date;
+    display: grid;
+    line-height: 1;
+  }
+
+  .show__day {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-stretch: 62%;
+    font-size: clamp(3rem, 8vw, 6.5rem);
+    letter-spacing: -0.02em;
+  }
+
+  .show__city {
+    grid-area: city;
+    transition: transform var(--dur-slow) var(--ease-out);
+  }
+
+  .show__venue {
+    grid-area: venue;
+    color: var(--color-muted);
+  }
+
+  .show__action {
+    grid-area: action;
+    margin-block-start: var(--space-2xs);
+  }
+
+  .show__status {
+    color: var(--color-bone);
+  }
+
+  .show--past {
+    opacity: 0.4;
+  }
+
+  .show--past .show__city {
+    text-decoration: line-through;
+    text-decoration-thickness: 2px;
+  }
+
+  @media (hover: hover) {
+    .show:hover::after {
+      transform: scaleX(1);
+    }
+
+    .show:hover .show__city {
+      transform: translateX(0.3em) skewX(-4deg);
+    }
+  }
+
+  /* ── Estado vacío: afiche ──────────────────────────── */
+  .shows__empty {
+    display: grid;
+    gap: var(--space-md);
+    padding-block: var(--space-lg);
+    border-block: 2px solid var(--color-bone);
+  }
+
+  .shows__empty-title {
+    font-size: clamp(3rem, 12vw, 12rem);
+    font-stretch: 100%;
+    white-space: normal;
+    max-inline-size: 9ch;
+  }
+
+  .shows__empty-sub {
+    color: var(--color-bone);
+  }
+
+  .shows__follow a {
+    color: var(--color-bone);
+  }
+
+  @media (min-width: 48rem) {
+    .show {
+      grid-template-columns: 9rem minmax(0, 1.4fr) minmax(0, 1fr) auto;
+      grid-template-areas: 'date city venue action';
+      align-items: center;
+    }
+
+    .show__action {
+      margin: 0;
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .shows__poster {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      column-gap: var(--space-xl);
+    }
+
+    .shows__head {
+      grid-column: 1 / -1;
+    }
+
+    .shows__list,
+    .shows__empty {
+      grid-column: 1 / -1;
+    }
+
+    .show {
+      grid-template-columns: 12rem minmax(0, 1.4fr) minmax(0, 1fr) auto;
+    }
+  }
+</style>

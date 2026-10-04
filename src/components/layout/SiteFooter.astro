@@ -1,0 +1,64 @@
+---
+/** Outro: el nombre vuelve a ocupar toda la pantalla y cierra el show. */
+import { siteData } from '@/data/site';
+
+const { band } = siteData;
+const year = new Date().getFullYear();
+---
+
+<footer class="outro" data-section="outro" data-section-index="—" data-section-label="Fin" data-atmosphere="1">
+  <p class="outro__name t-display" aria-hidden="true" data-outro-name>
+    <span class="outro__word">{band.nameParts[0]}</span>
+    <span class="outro__word">{band.nameParts[1]}</span>
+  </p>
+
+  <div class="outro__bar wrap t-micro">
+    <span>© {year} {band.name}</span>
+    <span class="outro__closing">{band.closingLine}</span>
+    <a href="#inicio" class="link-line" data-nav-link="inicio">Volver arriba ↑</a>
+  </div>
+</footer>
+
+<style>
+  .outro {
+    position: relative;
+    display: grid;
+    align-content: end;
+    min-block-size: 80svh;
+    padding-block-end: max(var(--space-md), env(safe-area-inset-bottom));
+    overflow: clip;
+    background: linear-gradient(to bottom, transparent, rgb(11 1 1 / 0.85) 70%);
+  }
+
+  .outro__name {
+    display: flex;
+    flex-direction: column;
+    padding-inline: calc(var(--gutter) * 0.5);
+    font-size: min(calc((100vw - var(--gutter)) / 5.2), 26rem);
+    color: var(--color-bone);
+  }
+
+  .outro__word {
+    display: block;
+  }
+
+  .outro__word:last-child {
+    align-self: flex-end;
+    color: var(--color-blood);
+  }
+
+  .outro__bar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--space-xs) var(--space-md);
+    padding-block-start: var(--space-md);
+    margin-block-start: var(--space-md);
+    border-block-start: 1px solid var(--color-line);
+    color: var(--color-bone);
+  }
+
+  .outro__closing {
+    color: var(--color-glow);
+  }
+</style>

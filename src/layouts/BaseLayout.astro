@@ -1,0 +1,124 @@
+---
+import { Font, getImage } from 'astro:assets';
+import '@/styles/global.css';
+import { siteData } from '@/data/site';
+import { collectPendingContent } from '@/lib/content/pending';
+import Atmosphere from '@/components/effects/Atmosphere.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { meta, band, photos, socialLinks } = siteData;
+const { title = meta.title, description = meta.description } = Astro.props;
+
+const site = Astro.site;
+const canonical = site ? new URL(Astro.url.pathname, site).href : null;
+const absolute = (path: string) => (site ? new URL(path, site).href : path);
+
+// Imagen social 1.91:1 generada desde la foto principal.
+const ogImage = await getImage({
+  src: photos.hero.src,
+  width: 1200,
+  height: 630,
+  fit: 'cover',
+  position: 'top',
+  format: 'jpg',
+  quality: 80,
+});
+
+// JSON-LD MusicGroup: solo datos reales (los `null` se omiten).
+const sameAs = socialLinks.map((l) => l.href).filter((href): href is string => href !== null);
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'MusicGroup',
+  name: band.name,
+  description: meta.description,
+  image: absolute(ogImage.src),
+  ...(canonical && { url: canonical }),
+  ...(band.genre && { genre: band.genre }),
+  ...(band.foundedYear && { foundingDate: band.foundedYear }),
+  ...(band.city && { foundingLocation: { '@type': 'Place', name: band.city } }),
+  ...(sameAs.length > 0 && { sameAs }),
+  track: siteData.tracks.map((t) => ({
+    '@type': 'MusicRecording',
+    name: t.title,
+    duration: `PT${Math.floor(t.durationSeconds / 60)}M${t.durationSeconds % 60}S`,
+  })),
+};
+
+// Reporte de contenido pendiente, una vez por proceso (build o dev server).
+const globalFlags = globalThis as { __llPendingReported?: boolean };
+if (!globalFlags.__llPendingReported) {
+  globalFlags.__llPendingReported = true;
+  const pending = collectPendingContent(siteData, site);
+  if (pending.length) {
+    console.warn(
+      `\n[contenido] ${pending.length} datos reales pendientes (src/data/site.ts):\n` +
+        pending.map((p) => `  · ${p}`).join('\n') +
+        '\n',
+    );
+  }
+}
+---
+
+<!doctype html>
+<html lang={meta.lang} class="no-js">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="keywords" content={meta.keywords.join(', ')} />
+    {canonical && <link rel="canonical" href={canonical} />}
+    <meta name="theme-color" content={meta.themeColor} />
+    <meta name="color-scheme" content="dark" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta name="generator" content={Astro.generator} />
+
+    <!-- Open Graph / Twitter -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={band.name} />
+    <meta property="og:locale" content={meta.ogLocale} />
+    <meta property="og:title" content={meta.ogTitle} />
+    <meta property="og:description" content={meta.ogDescription} />
+    {canonical && <meta property="og:url" content={canonical} />}
+    <meta property="og:image" content={absolute(ogImage.src)} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={photos.hero.alt} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={meta.ogTitle} />
+    <meta name="twitter:description" content={meta.ogDescription} />
+    <meta name="twitter:image" content={absolute(ogImage.src)} />
+
+    <!-- Fuentes autoalojadas en build (Astro Fonts API). Solo la display se precarga. -->
+    <Font cssVariable="--font-archivo" preload />
+    <Font cssVariable="--font-plex-mono" />
+
+    <!--
+      Progressive enhancement: `js` y `motion` habilitan estados iniciales
+      ocultos para animar. Si el motion system no arranca en 3s, se retira
+      `motion` y todo el contenido queda visible.
+    -->
+    <script is:inline>
+      (() => {
+        const root = document.documentElement;
+        root.classList.replace('no-js', 'js');
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        root.classList.add('motion');
+        window.setTimeout(() => {
+          if (!root.hasAttribute('data-motion-ready')) root.classList.remove('motion');
+        }, 3000);
+      })();
+    </script>
+
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+  </head>
+  <body>
+    <a class="skip-link" href="#contenido">Saltar al contenido</a>
+    <Atmosphere />
+    <slot />
+  </body>
+</html>

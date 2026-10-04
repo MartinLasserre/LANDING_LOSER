@@ -1,0 +1,40 @@
+---
+/**
+ * Capa 0 del sitio: canvas WebGL de atmósfera (humo rojo).
+ * Se inicializa en diferido desde `src/lib/main.ts`; mientras tanto (o si
+ * WebGL falla) se ve el fondo CSS del documento.
+ */
+---
+
+<div class="atmosphere" aria-hidden="true">
+  <canvas class="atmosphere__canvas" data-atmosphere></canvas>
+  <div class="atmosphere__vignette"></div>
+</div>
+
+<style>
+  .atmosphere {
+    position: fixed;
+    inset: 0 0 auto;
+    /* lvh: no se redimensiona cuando aparece/desaparece la barra del navegador. */
+    height: 100lvh;
+    z-index: var(--z-atmosphere);
+    pointer-events: none;
+  }
+
+  .atmosphere__canvas {
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 1.6s var(--ease-out);
+  }
+
+  .atmosphere__canvas:global(.is-ready) {
+    opacity: 1;
+  }
+
+  .atmosphere__vignette {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 50%, rgb(11 1 1 / 0.6) 100%);
+  }
+</style>

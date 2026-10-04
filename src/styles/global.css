@@ -1,0 +1,310 @@
+@import './tokens.css';
+@import './typography.css';
+
+/* ── Reset mínimo ─────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+}
+
+html {
+  -webkit-text-size-adjust: none;
+  text-size-adjust: none;
+  /* Sin Lenis (reduced motion / sin JS) el ancla sigue siendo suave. */
+  scroll-behavior: smooth;
+  scroll-padding-top: var(--nav-height);
+
+  /*
+   * Atmósfera base (sin WebGL): humo rojo en CSS, en el elemento raíz para
+   * que el canvas WebGL (z-index negativo) pueda pintarse encima. Si WebGL
+   * falla o no carga, esto es lo que queda.
+   */
+  background-color: var(--color-bg);
+  background-image:
+    radial-gradient(120% 70% at 72% 18%, rgb(168 0 24 / 0.22), transparent 60%),
+    radial-gradient(90% 60% at 12% 78%, rgb(72 0 0 / 0.55), transparent 65%),
+    radial-gradient(140% 100% at 50% 50%, var(--color-ink) 30%, var(--color-ink-deep) 100%);
+  background-attachment: fixed;
+}
+
+/* Lenis gestiona el scroll: el smooth nativo competiría con él. */
+html.lenis {
+  scroll-behavior: auto;
+}
+
+body {
+  min-height: 100svh;
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  font-stretch: var(--stretch-body);
+  line-height: var(--lh-body);
+  color: var(--color-fg);
+  overflow-x: clip;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+
+}
+
+img,
+picture,
+svg,
+canvas,
+video {
+  display: block;
+  max-width: 100%;
+}
+
+img {
+  height: auto;
+}
+
+input,
+button,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  background: none;
+  border: 0;
+  padding: 0;
+}
+
+ul[role='list'],
+ol[role='list'] {
+  list-style: none;
+  padding: 0;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-weight: inherit;
+  font-size: inherit;
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+::selection {
+  background: var(--color-blood);
+  color: var(--color-bone);
+}
+
+/* ── Grano global (película / xerox) ─────────────────── */
+body::after {
+  content: '';
+  position: fixed;
+  inset: -10%;
+  z-index: var(--z-grain);
+  pointer-events: none;
+  opacity: var(--grain-opacity);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 .95 0 0 0 0 .9 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: grain 0.9s steps(6) infinite;
+}
+
+@keyframes grain {
+  0% { transform: translate3d(0, 0, 0); }
+  20% { transform: translate3d(-4%, 3%, 0); }
+  40% { transform: translate3d(3%, -5%, 0); }
+  60% { transform: translate3d(-6%, -2%, 0); }
+  80% { transform: translate3d(5%, 4%, 0); }
+  100% { transform: translate3d(0, 0, 0); }
+}
+
+/* ── Links y foco ────────────────────────────────────── */
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Subrayado que se dibuja (se usa en links de texto). */
+.link-line {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 0% 1px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  padding-block-end: 0.15em;
+  transition:
+    background-size var(--dur-slow) var(--ease-out),
+    color var(--dur-fast);
+}
+
+.link-line:is(:hover, :focus-visible) {
+  background-size: 100% 1px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 4px;
+  border-radius: 1px;
+}
+
+.skip-link {
+  position: fixed;
+  top: var(--space-sm);
+  left: var(--space-sm);
+  z-index: var(--z-skip);
+  padding: var(--space-2xs) var(--space-sm);
+  background: var(--color-bone);
+  color: var(--color-ink);
+  transform: translateY(-200%);
+  transition: transform var(--dur-fast);
+}
+
+.skip-link:focus-visible {
+  transform: none;
+}
+
+/* ── Utilidades ──────────────────────────────────────── */
+.visually-hidden:not(:focus):not(:active) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.wrap {
+  padding-inline: var(--gutter);
+}
+
+.grid-12 {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--grid-gap);
+}
+
+/* Botón editorial: el texto se desplaza y aparece un duplicado. */
+.btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  padding: 0.85em 1.4em;
+  border: 1px solid var(--color-line-strong);
+  font-family: var(--font-mono);
+  font-size: var(--fs-meta);
+  letter-spacing: var(--tracking-meta);
+  text-transform: uppercase;
+  color: var(--color-fg);
+  overflow: hidden;
+  transition:
+    border-color var(--dur-fast),
+    color var(--dur-fast),
+    background-color var(--dur-fast);
+}
+
+.btn__label {
+  display: inline-block;
+  transition: transform var(--dur-base) var(--ease-out);
+}
+
+.btn:hover,
+.btn:focus-visible {
+  border-color: var(--color-accent);
+  color: var(--color-bone);
+  background-color: rgb(255 42 26 / 0.08);
+}
+
+.btn:hover .btn__label {
+  transform: translateX(0.35em);
+}
+
+/* ── Glitch: acento puntual, nunca permanente ───────── */
+.is-glitching {
+  animation: glitch 220ms steps(2, jump-none) 1;
+}
+
+@keyframes glitch {
+  0% {
+    text-shadow: 0.04em 0 var(--color-neon), -0.04em 0 #2a4bff;
+    clip-path: inset(10% 0 52% 0);
+    transform: translateX(0.03em);
+  }
+  50% {
+    text-shadow: -0.05em 0 var(--color-neon), 0.03em 0 #2a4bff;
+    clip-path: inset(48% 0 8% 0);
+    transform: translateX(-0.04em);
+  }
+  100% {
+    text-shadow: none;
+    clip-path: none;
+    transform: none;
+  }
+}
+
+/* ── Estados iniciales de motion ─────────────────────── */
+/*
+ * Solo con la clase `motion` (JS activo y sin reduced-motion) los elementos
+ * arrancan ocultos. Un timeout de seguridad en el <head> la retira si el JS
+ * de animación no llega a iniciar: el contenido nunca depende de GSAP.
+ */
+.motion [data-reveal] {
+  opacity: 0;
+}
+
+/* ── Reduced motion ──────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  body::after {
+    animation: none;
+  }
+
+  *,
+  *::before,
+  *::after {
+    transition-duration: 1ms !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+/* ── Ícono de ecualizador (estado "sonando") ─────────── */
+.eq {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  block-size: 0.8rem;
+}
+
+.eq i {
+  inline-size: 2px;
+  block-size: 100%;
+  background: currentColor;
+  transform: scaleY(0.3);
+  transform-origin: bottom;
+}
+
+[data-state='playing'] .eq i {
+  animation: eq 0.8s var(--ease-in-out) infinite alternate;
+}
+
+.eq i:nth-child(2) {
+  animation-delay: -0.27s;
+}
+
+.eq i:nth-child(3) {
+  animation-delay: -0.54s;
+}
+
+@keyframes eq {
+  from { transform: scaleY(0.2); }
+  to { transform: scaleY(1); }
+}

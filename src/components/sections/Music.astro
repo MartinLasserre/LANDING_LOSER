@@ -1,0 +1,63 @@
+---
+/** 03 — Música. Título condensado gigante + player custom. */
+import { siteData } from '@/data/site';
+import SectionMeta from '@/components/ui/SectionMeta.astro';
+import MusicPlayer from '@/components/music/MusicPlayer.astro';
+
+const { sections, tracks } = siteData;
+const copy = sections.music;
+---
+
+<section id="musica" class="music wrap" data-section="musica" data-section-index={copy.index} data-section-label={copy.title} data-atmosphere="0.7" aria-labelledby="music-title">
+  <header class="music__head">
+    <SectionMeta index={copy.index} label={`${tracks.length} tracks`} />
+    <h2 id="music-title" class="music__title t-headline" data-reveal>{copy.title}</h2>
+    <p class="music__intro t-subtitle" data-reveal>{copy.intro}</p>
+  </header>
+
+  <MusicPlayer tracks={tracks} />
+</section>
+
+<style>
+  .music {
+    position: relative;
+    display: grid;
+    gap: var(--space-lg);
+    padding-block: var(--space-xl) var(--space-2xl);
+  }
+
+  .music__head {
+    display: grid;
+    gap: var(--space-sm);
+  }
+
+  .music__title {
+    font-size: clamp(4.5rem, 22vw, 22rem);
+    line-height: 0.8;
+    /* Aire para la tilde de la Ú con interlineado tan cerrado. */
+    padding-block-start: 0.12em;
+    margin-inline-start: -0.04em;
+  }
+
+  .music__intro {
+    font-stretch: 75%;
+    color: var(--color-glow);
+  }
+
+  @media (min-width: 64rem) {
+    .music {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      column-gap: var(--space-xl);
+      align-items: start;
+    }
+
+    .music__head {
+      position: sticky;
+      inset-block-start: calc(var(--nav-height) + var(--space-md));
+    }
+
+    .music__title {
+      font-size: clamp(6rem, 15vw, 18rem);
+    }
+  }
+</style>

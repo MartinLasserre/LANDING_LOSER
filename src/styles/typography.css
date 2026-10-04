@@ -1,0 +1,98 @@
+/*
+ * Jerarquía tipográfica
+ *   DISPLAY  → Archivo expandida, enorme (nombre de la banda)
+ *   HEADLINE → Archivo condensada, mayúsculas (títulos de sección)
+ *   BODY     → Archivo normal, legible
+ *   META     → IBM Plex Mono, chica, mayúsculas con tracking
+ *   NUMBERS  → Plex Mono tabular (índices, tiempos, fechas)
+ */
+
+.t-display {
+  font-family: var(--font-display);
+  font-size: var(--fs-display);
+  font-weight: 850;
+  font-stretch: var(--stretch-display);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tracking-display);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.t-headline {
+  font-family: var(--font-display);
+  font-size: var(--fs-headline);
+  font-weight: 800;
+  font-stretch: var(--stretch-headline);
+  line-height: var(--lh-tight);
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+}
+
+.t-title {
+  font-family: var(--font-display);
+  font-size: var(--fs-title);
+  font-weight: 700;
+  font-stretch: var(--stretch-headline);
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+
+.t-subtitle {
+  font-family: var(--font-display);
+  font-size: var(--fs-subtitle);
+  font-weight: 600;
+  font-stretch: 85%;
+  line-height: var(--lh-snug);
+}
+
+.t-lead {
+  font-size: var(--fs-lead);
+  line-height: 1.45;
+  font-weight: 400;
+  max-width: var(--measure);
+  text-wrap: pretty;
+}
+
+.t-body {
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  max-width: var(--measure);
+  color: var(--color-muted);
+  text-wrap: pretty;
+}
+
+.t-meta {
+  font-family: var(--font-mono);
+  font-size: var(--fs-meta);
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: var(--tracking-meta);
+  text-transform: uppercase;
+  color: var(--color-meta);
+}
+
+.t-micro {
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  letter-spacing: var(--tracking-meta);
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.t-num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+
+/* Texto vertical editorial (lomo de disco / borde de negativo). */
+.t-vertical {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+
+/* Tipografía en contorno, para capas de fondo. */
+.t-outline {
+  color: transparent;
+  -webkit-text-stroke: 1px var(--color-line-strong);
+}

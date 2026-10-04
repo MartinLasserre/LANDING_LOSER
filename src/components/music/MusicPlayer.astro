@@ -1,0 +1,405 @@
+---
+/**
+ * Player custom. El HTML es la lista de tracks con botones reales; la
+ * lógica vive en lib/audio (AudioManager + player-ui). Sin JS, el
+ * <noscript> ofrece reproductores nativos.
+ */
+import type { Track } from '@/types/content';
+import { formatTime } from '@/lib/content/format';
+
+interface Props {
+  tracks: Track[];
+}
+
+const { tracks } = Astro.props;
+const first = tracks[0];
+const pad = (n: number) => String(n).padStart(2, '0');
+---
+
+<div class="player" data-player>
+  <ol class="tracks" role="list" data-reveal-group>
+    {
+      tracks.map((track, i) => (
+        <li class="track" data-track-row={track.id}>
+          <span class="track__index t-num" aria-hidden="true">
+            {pad(i + 1)}
+          </span>
+          <h3 class="track__title t-title">{track.title}</h3>
+          <span class="track__eq eq" aria-hidden="true">
+            <i />
+            <i />
+            <i />
+          </span>
+          <span class="track__duration t-num t-micro">
+            <span class="visually-hidden">Duración </span>
+            {formatTime(track.durationSeconds)}
+          </span>
+          <button
+            type="button"
+            class="track__toggle"
+            data-track-toggle={track.id}
+            data-src={track.src}
+            data-title={track.title}
+            data-duration={track.durationSeconds}
+            aria-label={`Reproducir ${track.title}`}
+          >
+            <span class="track__toggle-label t-meta" data-track-label aria-hidden="true">
+              Play
+            </span>
+          </button>
+          {track.link && (
+            <a class="track__link t-micro link-line" href={track.link} target="_blank" rel="noopener">
+              Escuchar en plataforma<span class="visually-hidden"> ({track.title}, abre en otra pestaña)</span>
+            </a>
+          )}
+        </li>
+      ))
+    }
+  </ol>
+
+  {
+    first && (
+      <section class="deck" aria-label="Reproductor" data-deck data-reveal>
+        <button type="button" class="deck__toggle" data-deck-toggle aria-label={`Reproducir ${first.title}`}>
+          <svg class="deck__icon deck__icon--play" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M7 4.5v15l12-7.5z" fill="currentColor" />
+          </svg>
+          <svg class="deck__icon deck__icon--pause" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M6 4.5h4v15H6zM14 4.5h4v15h-4z" fill="currentColor" />
+          </svg>
+        </button>
+
+        <div class="deck__info">
+          <p class="t-micro deck__status" data-deck-status>Listo</p>
+          <p class="deck__title" data-deck-title>
+            {first.title}
+          </p>
+        </div>
+
+        <canvas class="deck__viz" data-deck-viz aria-hidden="true" />
+
+        <div class="deck__timeline">
+          <span class="t-num t-micro deck__time" data-deck-current>
+            0:00
+          </span>
+          <input
+            class="deck__seek"
+            type="range"
+            min="0"
+            max={first.durationSeconds}
+            step="1"
+            value="0"
+            data-deck-seek
+            aria-label="Posición en el track"
+            aria-valuetext={`0:00 de ${formatTime(first.durationSeconds)}`}
+          />
+          <span class="t-num t-micro deck__time" data-deck-duration>
+            {formatTime(first.durationSeconds)}
+          </span>
+        </div>
+        <p class="visually-hidden" role="status" data-deck-announcer />
+      </section>
+    )
+  }
+
+  <noscript>
+    <ul class="player__fallback" role="list">
+      {
+        tracks.map((track) => (
+          <li>
+            <p class="t-meta">{track.title}</p>
+            <audio controls preload="none" src={track.src} />
+          </li>
+        ))
+      }
+    </ul>
+  </noscript>
+</div>
+
+<style>
+  .player {
+    display: grid;
+    gap: var(--space-lg);
+  }
+
+  /* ── Lista de tracks ─────────────────────────────── */
+  .tracks {
+    border-block-start: 1px solid var(--color-line);
+  }
+
+  .track {
+    position: relative;
+    display: grid;
+    grid-template-columns: 2.25rem minmax(0, 1fr) auto auto;
+    grid-template-areas:
+      'index title eq toggle'
+      'index duration duration toggle'
+      'index link link link';
+    align-items: center;
+    column-gap: var(--space-sm);
+    padding-block: var(--space-sm);
+    border-block-end: 1px solid var(--color-line);
+    transition:
+      opacity var(--dur-base) var(--ease-out),
+      color var(--dur-fast);
+  }
+
+  .track__index {
+    grid-area: index;
+    align-self: start;
+    padding-block-start: 0.4em;
+    color: var(--color-meta);
+    font-size: var(--fs-meta);
+  }
+
+  .track__title {
+    grid-area: title;
+    transition: transform var(--dur-slow) var(--ease-out);
+  }
+
+  .track__eq {
+    grid-area: eq;
+    opacity: 0;
+    transition: opacity var(--dur-fast);
+  }
+
+  .track__duration {
+    grid-area: duration;
+  }
+
+  .track__toggle {
+    grid-area: toggle;
+    min-inline-size: 4.5rem;
+    min-block-size: 2.75rem;
+    text-align: end;
+  }
+
+  /* El botón cubre toda la fila: área táctil grande, semántica correcta. */
+  .track__toggle::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+
+  .track__toggle:focus-visible {
+    outline: none;
+  }
+
+  .track:has(.track__toggle:focus-visible) {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+
+  .track__toggle-label {
+    color: var(--color-bone);
+  }
+
+  .track__link {
+    grid-area: link;
+    position: relative;
+    z-index: 1;
+    justify-self: start;
+    margin-block-start: var(--space-2xs);
+    color: var(--color-meta);
+  }
+
+  @media (hover: hover) {
+    .tracks:hover .track:not(:hover) {
+      opacity: 0.4;
+    }
+
+    .track:hover .track__title {
+      transform: translateX(0.25em);
+    }
+  }
+
+  .track[data-state='playing'],
+  .track[data-state='paused'] {
+    color: var(--color-glow);
+  }
+
+  .track[data-state='playing'] .track__eq {
+    opacity: 1;
+  }
+
+  /* ── Deck ────────────────────────────────────────── */
+  .deck {
+    position: sticky;
+    inset-block-end: max(var(--space-sm), env(safe-area-inset-bottom));
+    z-index: var(--z-raised);
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      'toggle info'
+      'timeline timeline';
+    align-items: center;
+    gap: var(--space-xs) var(--space-sm);
+    padding: var(--space-sm);
+    border: 1px solid var(--color-line);
+    background: rgb(11 1 1 / 0.82);
+    backdrop-filter: blur(10px);
+  }
+
+  .deck__toggle {
+    grid-area: toggle;
+    display: grid;
+    place-items: center;
+    inline-size: 3rem;
+    block-size: 3rem;
+    border: 1px solid var(--color-line-strong);
+    border-radius: 50%;
+    color: var(--color-bone);
+    transition:
+      border-color var(--dur-fast),
+      transform var(--dur-fast);
+  }
+
+  .deck__toggle:hover {
+    border-color: var(--color-accent);
+  }
+
+  .deck__toggle:active {
+    transform: scale(0.94);
+  }
+
+  .deck__icon {
+    inline-size: 1.1rem;
+  }
+
+  .deck__icon--pause,
+  .deck[data-state='playing'] .deck__icon--play {
+    display: none;
+  }
+
+  .deck[data-state='playing'] .deck__icon--pause {
+    display: block;
+  }
+
+  .deck__info {
+    grid-area: info;
+    min-inline-size: 0;
+  }
+
+  .deck__status {
+    color: var(--color-meta);
+  }
+
+  .deck__title {
+    font-family: var(--font-display);
+    font-stretch: 75%;
+    font-weight: 700;
+    font-size: var(--fs-subtitle);
+    line-height: 1;
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .deck__viz {
+    display: none;
+    grid-area: viz;
+    inline-size: 100%;
+    block-size: 2.5rem;
+  }
+
+  .deck__timeline {
+    grid-area: timeline;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--space-xs);
+  }
+
+  .deck__time {
+    color: var(--color-bone);
+    min-inline-size: 2.75em;
+  }
+
+  .deck__time:last-child {
+    text-align: end;
+  }
+
+  /* Range estilizado: barra fina, thumb cuadrado. */
+  .deck__seek {
+    --fill: 0%;
+    appearance: none;
+    inline-size: 100%;
+    block-size: 1.75rem;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .deck__seek::-webkit-slider-runnable-track {
+    block-size: 2px;
+    background: linear-gradient(to right, var(--color-neon) var(--fill), var(--color-line-strong) var(--fill));
+  }
+
+  .deck__seek::-moz-range-track {
+    block-size: 2px;
+    background: linear-gradient(to right, var(--color-neon) var(--fill), var(--color-line-strong) var(--fill));
+  }
+
+  .deck__seek::-webkit-slider-thumb {
+    appearance: none;
+    inline-size: 0.75rem;
+    block-size: 0.75rem;
+    margin-block-start: -5px;
+    background: var(--color-bone);
+    border: 0;
+    border-radius: 0;
+  }
+
+  .deck__seek::-moz-range-thumb {
+    inline-size: 0.75rem;
+    block-size: 0.75rem;
+    background: var(--color-bone);
+    border: 0;
+    border-radius: 0;
+  }
+
+  .deck__seek:focus-visible {
+    outline-offset: 2px;
+  }
+
+  .player__fallback {
+    display: grid;
+    gap: var(--space-sm);
+  }
+
+  @media (min-width: 48rem) {
+    .track {
+      grid-template-columns: 3.5rem minmax(0, 1fr) auto 5rem 6rem;
+      grid-template-areas: 'index title eq duration toggle' 'index link link link link';
+      padding-block: var(--space-md);
+    }
+
+    .track__index {
+      align-self: center;
+      padding: 0;
+    }
+
+    .track__duration {
+      text-align: end;
+    }
+
+    .deck {
+      grid-template-columns: auto minmax(0, 14rem) minmax(0, 1fr);
+      grid-template-areas:
+        'toggle info viz'
+        'toggle timeline timeline';
+      padding: var(--space-sm) var(--space-md);
+    }
+
+    .deck__viz {
+      display: block;
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .deck {
+      grid-template-columns: auto minmax(0, 16rem) minmax(0, 1fr) minmax(0, 1.4fr);
+      grid-template-areas: 'toggle info viz timeline';
+    }
+  }
+</style>

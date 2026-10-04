@@ -1,0 +1,31 @@
+---
+/** Numeración editorial de sección: `01 ─── Banda`. */
+interface Props {
+  index: string;
+  label: string;
+  class?: string;
+}
+
+const { index, label, class: className } = Astro.props;
+---
+
+<p class:list={['section-meta t-meta', className]} data-reveal>
+  <span class="t-num">{index}</span>
+  <span class="section-meta__rule" aria-hidden="true"></span>
+  <span>{label}</span>
+</p>
+
+<style>
+  .section-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+  }
+
+  .section-meta__rule {
+    inline-size: clamp(2rem, 6vw, 5rem);
+    block-size: 1px;
+    background: currentColor;
+    opacity: 0.6;
+  }
+</style>

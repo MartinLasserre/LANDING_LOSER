@@ -1,0 +1,247 @@
+---
+/**
+ * 02 — Archivo. Experiencia pinned principal.
+ *
+ * Sin JS o con reduced-motion: secuencia vertical editorial asimétrica.
+ * Con motion (clase `motion` en <html>): escenario a pantalla completa que
+ * se fija mientras los cuadros del rollo entran y salen; el último cuadro
+ * (el público) inunda la pantalla y un bloque negro cierra la escena.
+ * Timeline en lib/animations/archive.ts.
+ */
+import { Image } from 'astro:assets';
+import { siteData } from '@/data/site';
+import Photo from '@/components/ui/Photo.astro';
+import SectionMeta from '@/components/ui/SectionMeta.astro';
+
+const { band, photos, sections } = siteData;
+const copy = sections.archive;
+const frames = photos.archive;
+const lastFrame = frames.at(-1);
+const closing = band.taglines[frames.length] ?? band.closingLine;
+const pad = (n: number) => String(n).padStart(2, '0');
+---
+
+<section id="archivo" class="archive" data-section="archivo" data-section-index={copy.index} data-section-label="Archivo" data-atmosphere="0.85" aria-labelledby="archive-title">
+  <div class="archive__stage" data-archive-stage>
+    <header class="archive__head">
+      <SectionMeta index={copy.index} label="Rollo 01" />
+      <h2 id="archive-title" class="t-headline" data-reveal>{copy.title}</h2>
+      <p class="t-body archive__intro" data-reveal>{copy.intro}</p>
+    </header>
+
+    <div class="archive__frames">
+      {
+        frames.map((photo, i) => (
+          <div class="archive__item" data-archive-item>
+            <Photo
+              photo={photo}
+              figure={`${copy.index}.${pad(i + 1)}`}
+              sizes="(min-width: 64rem) 30rem, (min-width: 48rem) 44vw, 66vw"
+              class="archive__frame"
+              data-archive-frame
+            />
+            <p class="archive__line t-title" data-archive-line>
+              {band.taglines[i] ?? photo.caption}
+            </p>
+          </div>
+        ))
+      }
+    </div>
+
+    <p class="archive__counter t-num t-meta" aria-hidden="true">
+      <span data-archive-counter>01</span> / {pad(frames.length)}
+    </p>
+
+    {
+      lastFrame && (
+        <div class="archive__flood" aria-hidden="true" data-archive-flood>
+          <Image src={lastFrame.src} alt="" widths={[682]} sizes="100vw" loading="lazy" class="archive__flood-img" />
+        </div>
+      )
+    }
+
+    <div class="archive__blackout" data-archive-blackout>
+      <p class="t-headline archive__closing" data-archive-closing>{closing}</p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .archive {
+    position: relative;
+  }
+
+  /* ── Layout estático: secuencia vertical editorial ─────────── */
+  .archive__stage {
+    display: grid;
+    gap: var(--space-xl);
+    padding: var(--space-xl) var(--gutter);
+  }
+
+  .archive__head {
+    display: grid;
+    gap: var(--space-sm);
+  }
+
+  .archive__frames {
+    display: grid;
+    gap: var(--space-xl);
+  }
+
+  .archive__item {
+    display: grid;
+    gap: var(--space-sm);
+    inline-size: min(100%, 26rem);
+  }
+
+  .archive__item:nth-child(2) {
+    justify-self: end;
+  }
+
+  .archive__item:nth-child(3) {
+    justify-self: center;
+  }
+
+  .archive__line {
+    max-inline-size: 12ch;
+  }
+
+  .archive__counter,
+  .archive__flood {
+    display: none;
+  }
+
+  .archive__blackout {
+    padding-block: var(--space-xl);
+    text-align: center;
+  }
+
+  .archive__closing {
+    font-size: var(--fs-title);
+  }
+
+  /* ── Layout con motion: escenario pinned ──────────────────── */
+  :global(.motion) .archive__stage {
+    position: relative;
+    block-size: 100svh;
+    overflow: clip;
+    padding: 0;
+    gap: 0;
+    grid-template-columns: var(--gutter) minmax(0, 1fr) var(--gutter);
+    grid-template-rows: calc(var(--nav-height) + 1rem) auto minmax(0, 1fr) auto auto var(--space-md);
+  }
+
+  :global(.motion) .archive__head {
+    grid-area: 2 / 2;
+    gap: var(--space-2xs);
+  }
+
+  :global(.motion) .archive__head h2 {
+    font-size: clamp(2.75rem, 9vw, 7.5rem);
+  }
+
+  :global(.motion) .archive__intro {
+    display: none;
+  }
+
+  :global(.motion) .archive__frames,
+  :global(.motion) .archive__item {
+    display: contents;
+  }
+
+  :global(.motion) .archive__frame {
+    grid-area: 3 / 2;
+    align-self: center;
+    justify-self: center;
+    inline-size: min(66vw, 44svh);
+    margin-block: var(--space-sm);
+  }
+
+  :global(.motion) .archive__line {
+    grid-area: 4 / 2;
+    max-inline-size: 14ch;
+    z-index: var(--z-raised);
+  }
+
+  /* Hasta que arranca el timeline, solo el primer cuadro es visible. */
+  :global(.motion) .archive__item:not(:first-child) :is(.archive__frame, .archive__line) {
+    visibility: hidden;
+  }
+
+  :global(.motion) .archive__counter {
+    display: block;
+    grid-area: 5 / 2;
+    justify-self: end;
+    color: var(--color-bone);
+  }
+
+  :global(.motion) .archive__flood {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    clip-path: inset(50% 50% 50% 50%);
+    visibility: hidden;
+  }
+
+  .archive__flood :global(img) {
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+    filter: contrast(1.1) brightness(0.8);
+  }
+
+  :global(.motion) .archive__blackout {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    display: grid;
+    place-items: center;
+    padding: var(--gutter);
+    background: var(--color-ink-deep);
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  :global(.motion) .archive__closing {
+    font-size: clamp(3rem, 11vw, 10rem);
+    max-inline-size: 12ch;
+  }
+
+  @media (min-width: 64rem) {
+    .archive__item {
+      inline-size: min(40%, 30rem);
+    }
+
+    .archive__item:nth-child(1) {
+      margin-inline-start: 8%;
+    }
+
+    :global(.motion) .archive__stage {
+      grid-template-columns: var(--gutter) minmax(0, 1fr) auto minmax(0, 0.7fr) var(--gutter);
+      grid-template-rows: calc(var(--nav-height) + 2rem) auto minmax(0, 1fr) auto var(--space-lg);
+    }
+
+    :global(.motion) .archive__head {
+      grid-area: 2 / 2;
+    }
+
+    :global(.motion) .archive__frame {
+      grid-area: 2 / 3 / 5 / 4;
+      inline-size: min(30vw, 30rem, 56svh);
+      margin: 0;
+    }
+
+    :global(.motion) .archive__line {
+      grid-area: 4 / 2 / 5 / 4;
+      align-self: end;
+      max-inline-size: 16ch;
+      font-size: clamp(2.25rem, 4.4vw, 5rem);
+    }
+
+    :global(.motion) .archive__counter {
+      grid-area: 4 / 4;
+      align-self: end;
+    }
+  }
+</style>
