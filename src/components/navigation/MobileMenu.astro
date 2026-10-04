@@ -1,0 +1,118 @@
+---
+/**
+ * Índice mobile a pantalla completa, como un afiche: numeración, tipografía
+ * condensada grande y las redes al pie. Comportamiento en lib/ui/mobile-menu.ts.
+ */
+import { siteData } from '@/data/site';
+
+const { navigation, socialLinks } = siteData;
+---
+
+<div id="menu-movil" class="menu" data-mobile-menu hidden>
+  <nav class="menu__nav" aria-label="Índice">
+    <ol class="menu__list" role="list">
+      {
+        navigation.map((item) => (
+          <li class="menu__item" data-menu-item>
+            <a
+              href={`#${item.target}`}
+              class="menu__link"
+              data-nav-link={item.target}
+              data-nav-sections={[item.target, ...(item.alsoActiveIn ?? [])].join(' ')}
+            >
+              <span class="menu__num t-num" aria-hidden="true">
+                {item.index}
+              </span>
+              <span class="menu__label">{item.label}</span>
+            </a>
+          </li>
+        ))
+      }
+    </ol>
+  </nav>
+
+  {
+    socialLinks.length > 0 && (
+      <ul class="menu__social" role="list" data-menu-item>
+        {socialLinks.map((link) => (
+          <li>
+            <a class="link-line t-meta" href={link.href} target="_blank" rel="noopener noreferrer">
+              {link.label}
+              <span class="visually-hidden"> (abre en otra pestaña)</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    )
+  }
+</div>
+
+<style>
+  .menu {
+    position: fixed;
+    inset: 0;
+    z-index: calc(var(--z-nav) - 1);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: var(--space-lg);
+    padding: calc(var(--nav-height) + var(--space-lg)) var(--gutter) max(var(--space-md), env(safe-area-inset-bottom));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    background:
+      radial-gradient(90% 60% at 80% 10%, rgb(168 0 24 / 0.25), transparent 60%),
+      var(--color-ink-deep);
+  }
+
+  .menu[hidden] {
+    display: none;
+  }
+
+  .menu__list {
+    display: grid;
+    gap: var(--space-2xs);
+    border-block-start: 1px solid var(--color-line);
+  }
+
+  .menu__item {
+    border-block-end: 1px solid var(--color-line);
+  }
+
+  .menu__link {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-sm);
+    padding-block: var(--space-xs);
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-stretch: var(--stretch-headline);
+    font-size: clamp(2.75rem, 14vw, 5.5rem);
+    line-height: 0.9;
+    text-transform: uppercase;
+  }
+
+  .menu__num {
+    padding-block-start: 0.5rem;
+    font-size: var(--fs-meta);
+    font-weight: 400;
+    color: var(--color-meta);
+  }
+
+  .menu__link[aria-current='true'] .menu__label {
+    color: var(--color-glow);
+  }
+
+  .menu__link[aria-current='true'] .menu__num {
+    color: var(--color-accent);
+  }
+
+  .menu__social {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm) var(--space-lg);
+  }
+
+  .menu__social a {
+    color: var(--color-bone);
+  }
+</style>

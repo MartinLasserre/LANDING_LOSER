@@ -49,9 +49,9 @@ export function initReveals(): Cleanup {
   // Red de seguridad: si el foco llega a algo todavía oculto, mostrarlo ya.
   const onFocusIn = (event: FocusEvent) => {
     const target = event.target as Element | null;
-    const hidden = target?.closest<HTMLElement>('[data-reveal], [data-reveal-group] > *');
+    const hidden = target?.closest<HTMLElement>('[data-reveal], [data-reveal-group] > *, [data-flyer]');
     if (hidden && Number(getComputedStyle(hidden).opacity) < 1) {
-      gsap.to(hidden, { opacity: 1, y: 0, duration: 0.3, overwrite: true });
+      gsap.to(hidden, { opacity: 1, y: 0, rotation: 0, duration: 0.3, overwrite: true });
     }
   };
   document.addEventListener('focusin', onFocusIn);

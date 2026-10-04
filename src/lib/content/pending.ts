@@ -1,8 +1,8 @@
 import type { SiteData } from '@/types/content';
 
 /**
- * Lista los datos reales que todavía faltan (campos `null`, secciones
- * vacías y títulos provisorios). Se imprime en cada build para que los
+ * Lista los datos reales que todavía faltan (campos `null` y secciones
+ * vacías). Se imprime en cada build para que los
  * pendientes no queden ocultos en el código.
  */
 export function collectPendingContent(site: SiteData, siteUrl: URL | undefined): string[] {
@@ -17,22 +17,18 @@ export function collectPendingContent(site: SiteData, siteUrl: URL | undefined):
   check(site.band.genre, 'band.genre');
   check(site.band.foundedYear, 'band.foundedYear');
 
-  const photos = [site.photos.hero, site.photos.band, ...site.photos.archive];
-  const uncredited = photos.filter((p) => p.credit === null).map((p) => p.id);
-  if (uncredited.length) pending.push(`photos.*.credit (${uncredited.join(', ')})`);
+  site.tracks.forEach((t) => check(t.link, `tracks.${t.id}.link`));
 
-  site.tracks.forEach((t) => {
-    if (/^Pista /.test(t.title)) pending.push(`tracks.${t.id}.title (provisorio: "${t.title}")`);
-    check(t.link, `tracks.${t.id}.link`);
-  });
-
-  if (site.shows.length === 0) pending.push('shows (sin fechas cargadas)');
+  if (site.pastShows.length === 0) pending.push('pastShows (fechas pasadas con flyer)');
+  const noCity = site.pastShows.filter((show) => show.city === null).length;
+  if (noCity) pending.push(`pastShows.*.city (${noCity} fechas sin ciudad)`);
+  if (site.shows.length === 0) pending.push('shows (próximas fechas)');
   site.shows.forEach((s) => check(s.ticketUrl, `shows.${s.id}.ticketUrl`));
 
   check(site.contact.email, 'contact.email');
+  check(site.contact.whatsapp, 'contact.whatsapp');
   check(site.contact.booking, 'contact.booking');
   check(site.contact.press, 'contact.press');
-  site.socialLinks.forEach((l) => check(l.href, `socialLinks.${l.id}.href`));
 
   return pending;
 }

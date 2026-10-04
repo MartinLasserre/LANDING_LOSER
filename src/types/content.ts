@@ -42,21 +42,28 @@ export interface NavItem {
   label: string;
   /** id de la sección destino, sin `#`. */
   target: SectionId;
+  /** Numeración editorial: la misma de la sección destino. */
+  index: string;
+  /** Otras secciones en las que este link también se marca como activo. */
+  alsoActiveIn?: SectionId[];
 }
 
-export type SectionId = 'inicio' | 'banda' | 'archivo' | 'musica' | 'shows' | 'contacto';
+export type SectionId =
+  | 'inicio'
+  | 'banda'
+  | 'archivo'
+  | 'musica'
+  | 'video'
+  | 'en-vivo'
+  | 'shows'
+  | 'contacto';
 
 export interface Photo {
   id: string;
   src: ImageMetadata;
   alt: string;
-  /** Pie editorial corto. */
-  caption: string;
   /** `object-position` para encuadres recortados. */
   focus?: string;
-  year: Pending<string>;
-  location: Pending<string>;
-  credit: Pending<string>;
 }
 
 export interface Track {
@@ -83,14 +90,63 @@ export interface Show {
   status: ShowStatus;
 }
 
+/** Solo redes con URL real: una red sin URL no se carga (no se muestran links vacíos). */
+export interface VideoSource {
+  /** Ruta pública, p. ej. `/video/tempestad.mp4`. */
+  src: string;
+  type: 'video/mp4' | 'video/webm';
+}
+
+/**
+ * Video destacado (sección Video). Una sola API para dos orígenes:
+ * - `local`: archivos propios en `public/video/` (uno o más formatos).
+ * - `youtube`: ID explícito de un video del canal. Se carga con "fachada":
+ *   primero el poster, el iframe recién cuando el usuario da play.
+ */
+export type FeaturedVideo =
+  | {
+      kind: 'local';
+      title: string;
+      sources: VideoSource[];
+      poster: ImageMetadata;
+      /** Dimensiones del video (definen el aspect ratio, sin CLS). */
+      width: number;
+      height: number;
+    }
+  | {
+      kind: 'youtube';
+      title: string;
+      /** ID del video (lo que sigue a `watch?v=`). Nunca inferirlo: debe ser explícito. */
+      videoId: string;
+      /** Poster propio; si falta, se usa la miniatura de YouTube. */
+      poster?: ImageMetadata;
+    };
+
+/** Concierto ya realizado, con su flyer real (sección En vivo). */
+export interface PastShow {
+  id: string;
+  /** Fecha ISO `AAAA-MM-DD`. El año de agrupación se deriva de acá. */
+  date: string;
+  venue: string;
+  city: Pending<string>;
+  /** Nombre del archivo del flyer real en `src/assets/flyers/` (p. ej. `2026-05-12-lugar.jpg`). */
+  flyer: string;
+  /** Descripción del flyer para lectores de pantalla. */
+  alt: string;
+  /** Otras bandas de la fecha, si se quiere registrar. */
+  bands?: string[];
+}
+
 export interface SocialLink {
   id: 'instagram' | 'spotify' | 'bandcamp' | 'youtube' | 'soundcloud' | 'tiktok';
   label: string;
-  href: Pending<string>;
+  href: string;
 }
 
 export interface Contact {
   email: Pending<string>;
+  /** Link de "click to chat" de WhatsApp (api.whatsapp.com/send…). */
+  whatsapp: Pending<string>;
   booking: Pending<string>;
   press: Pending<string>;
 }
@@ -105,7 +161,7 @@ export interface SiteData {
   meta: SiteMeta;
   band: Band;
   navigation: NavItem[];
-  sections: Record<'band' | 'archive' | 'music' | 'shows' | 'contact', SectionCopy>;
+  sections: Record<'band' | 'archive' | 'music' | 'video' | 'live' | 'shows' | 'contact', SectionCopy>;
   photos: {
     hero: Photo;
     band: Photo;
@@ -116,6 +172,11 @@ export interface SiteData {
     archive: Photo[];
   };
   tracks: Track[];
+  /** `null` = la sección Video no se renderiza. */
+  featuredVideo: FeaturedVideo | null;
+  /** Archivo de fechas pasadas. Vacío = la sección En vivo no se renderiza. */
+  pastShows: PastShow[];
+  /** Próximas fechas. */
   shows: Show[];
   showsEmpty: { title: string; subtitle: string };
   contact: Contact;

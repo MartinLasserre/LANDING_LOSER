@@ -8,19 +8,18 @@ export interface SectionChange {
 }
 
 /**
- * Observa las secciones (`[data-section]`, con `data-section-index`,
- * `data-section-label` y `data-atmosphere`) con ScrollTrigger:
- * - marca el link activo de la navegación (`aria-current`);
- * - actualiza el indicador "00 Inicio" y la barra de progreso;
+ * Observa las secciones (`[data-section]`, con `data-atmosphere`) con
+ * ScrollTrigger:
+ * - marca con `aria-current` los links de navegación (header y menú mobile)
+ *   cuya lista `data-nav-sections` incluye la sección activa;
+ * - actualiza la barra de progreso del header;
  * - notifica el cambio de escena (la atmósfera WebGL lo usa).
  * Funciona también con reduced motion: es estado, no animación.
  */
 export function initSections(onChange: (change: SectionChange) => void): Cleanup {
   const sections = [...document.querySelectorAll<HTMLElement>('[data-section]')];
-  const links = [...document.querySelectorAll<HTMLAnchorElement>('[data-site-header] [data-nav-link]')];
+  const links = [...document.querySelectorAll<HTMLAnchorElement>('[data-nav-sections]')];
   const header = document.querySelector<HTMLElement>('[data-site-header]');
-  const nowIndex = document.querySelector<HTMLElement>('[data-nav-now-index]');
-  const nowLabel = document.querySelector<HTMLElement>('[data-nav-now-label]');
 
   let current = '';
   const activate = (section: HTMLElement) => {
@@ -29,12 +28,10 @@ export function initSections(onChange: (change: SectionChange) => void): Cleanup
     current = id;
 
     links.forEach((link) => {
-      if (link.dataset['navLink'] === id && id !== 'inicio') link.setAttribute('aria-current', 'true');
+      const matches = (link.dataset['navSections'] ?? '').split(' ').includes(id);
+      if (matches) link.setAttribute('aria-current', 'true');
       else link.removeAttribute('aria-current');
     });
-
-    if (nowIndex) nowIndex.textContent = section.dataset['sectionIndex'] ?? '—';
-    if (nowLabel) nowLabel.textContent = section.dataset['sectionLabel'] ?? '';
 
     onChange({ id, atmosphere: Number(section.dataset['atmosphere'] ?? 0.6) });
   };

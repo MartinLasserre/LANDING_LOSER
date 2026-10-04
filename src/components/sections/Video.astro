@@ -1,0 +1,215 @@
+---
+/**
+ * 04 — Video. Extensión audiovisual de un track (hoy: Tempestad).
+ * El título gigante queda detrás del cuadro; al scrollear el cuadro crece
+ * hasta casi ocupar el viewport (lib/animations/video.ts).
+ *
+ * Fuente: `siteData.featuredVideo` → local (MP4/WebM propios) o YouTube
+ * (fachada: poster primero, iframe recién al dar play). Con `null` la
+ * sección no se renderiza. Reproducción y coordinación con el player de
+ * tracks: lib/video/featured-video.ts.
+ */
+import { getImage } from 'astro:assets';
+import { siteData } from '@/data/site';
+import SectionMeta from '@/components/ui/SectionMeta.astro';
+
+const { featuredVideo: video, sections } = siteData;
+const copy = sections.video;
+
+const poster = video?.poster
+  ? await getImage({ src: video.poster, width: Math.min(video.poster.width, 1600), format: 'webp', quality: 80 })
+  : null;
+const posterUrl = poster?.src ?? (video?.kind === 'youtube' ? `https://i.ytimg.com/vi/${video.videoId}/hqdefault.jpg` : '');
+const [rw, rh] = video?.kind === 'local' ? [video.width, video.height] : [16, 9];
+---
+
+{
+  video && (
+    <section id="video" class="video" data-section="video" data-atmosphere="0.3" aria-labelledby="video-title">
+      <div class="video__head wrap">
+        <SectionMeta index={copy.index} label={copy.title} />
+      </div>
+
+      <div class="video__stage" data-video-stage>
+        <h2 id="video-title" class="video__title" data-video-title>
+          {video.title}
+        </h2>
+
+        <div
+          class="video__frame"
+          data-video-frame
+          data-video-kind={video.kind}
+          data-state="idle"
+          style={`--rw: ${rw}; --rh: ${rh}`}
+        >
+          {video.kind === 'local' ? (
+            <video
+              class="video__media"
+              data-video-media
+              controls
+              preload="none"
+              playsinline
+              poster={posterUrl}
+              width={video.width}
+              height={video.height}
+              aria-label={`Video: ${video.title}`}
+            >
+              {video.sources.map((source) => (
+                <source src={source.src} type={source.type} />
+              ))}
+            </video>
+          ) : (
+            <div class="video__media" data-video-media data-youtube-id={video.videoId} data-youtube-title={video.title}>
+              <img src={posterUrl} alt="" width="1280" height="720" loading="lazy" decoding="async" />
+            </div>
+          )}
+
+          {video.kind === 'local' ? (
+            <button type="button" class="video__play" data-video-play aria-label={`Reproducir video: ${video.title}`}>
+              <span class="video__play-ring" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <path d="M8 5v14l11-7z" fill="currentColor" />
+                </svg>
+              </span>
+              <span class="video__play-label t-meta" aria-hidden="true">
+                Play
+              </span>
+            </button>
+          ) : (
+            <a
+              class="video__play"
+              data-video-play
+              href={`https://www.youtube.com/watch?v=${video.videoId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`Reproducir video: ${video.title}`}
+            >
+              <span class="video__play-ring" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <path d="M8 5v14l11-7z" fill="currentColor" />
+                </svg>
+              </span>
+              <span class="video__play-label t-meta" aria-hidden="true">
+                Play
+              </span>
+            </a>
+          )}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+<style>
+  .video {
+    position: relative;
+    padding-block: var(--space-xl) var(--space-2xl);
+    overflow-x: clip;
+  }
+
+  .video__stage {
+    display: grid;
+    justify-items: center;
+    padding-block-start: var(--space-md);
+  }
+
+  /* Título gráfico: condensado, enorme, parcialmente tapado por el cuadro. */
+  .video__title {
+    position: relative;
+    z-index: 0;
+    max-inline-size: 100%;
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-stretch: var(--stretch-headline);
+    font-size: calc((100vw - 2 * var(--gutter)) / 4.6);
+    line-height: 0.8;
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: var(--color-bone);
+    /* El cuadro se monta sobre la mitad inferior de las letras. */
+    margin-block-end: -0.3em;
+  }
+
+  .video__frame {
+    position: relative;
+    z-index: 1;
+    inline-size: min(calc(100vw - 2 * var(--gutter)), calc((100svh - 8rem) * var(--rw) / var(--rh)));
+    aspect-ratio: var(--rw) / var(--rh);
+    background: var(--color-ink-deep);
+    overflow: hidden;
+    transform-origin: center top;
+  }
+
+  .video__media,
+  .video__media :global(img),
+  .video__media :global(iframe) {
+    display: block;
+    inline-size: 100%;
+    block-size: 100%;
+    border: 0;
+    object-fit: cover;
+  }
+
+  .video__media :global(img) {
+    filter: contrast(1.08);
+  }
+
+  /* ── Play propio (con JS) ────────────────────────── */
+  .video__play {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: var(--space-xs);
+    color: var(--color-bone);
+    background: linear-gradient(to top, rgb(11 1 1 / 0.55), rgb(11 1 1 / 0.1) 60%);
+    transition: background-color var(--dur-base);
+  }
+
+  .video__play-ring {
+    display: grid;
+    place-items: center;
+    inline-size: clamp(4rem, 9vw, 6.5rem);
+    aspect-ratio: 1;
+    border: 1px solid currentColor;
+    border-radius: 50%;
+    transition:
+      transform var(--dur-base) var(--ease-out),
+      border-color var(--dur-fast),
+      color var(--dur-fast);
+  }
+
+  .video__play-ring svg {
+    inline-size: 32%;
+    translate: 6% 0;
+  }
+
+  .video__play:hover .video__play-ring,
+  .video__play:focus-visible .video__play-ring {
+    transform: scale(1.06);
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+
+  .video__play:focus-visible {
+    outline-offset: -6px;
+  }
+
+  /* Sin JS: video nativo con controles, sin el botón propio. */
+  :global(.no-js) .video__frame[data-video-kind='local'] .video__play {
+    display: none;
+  }
+
+  /* Una vez iniciado, quedan los controles nativos. */
+  .video__frame:not([data-state='idle']) .video__play {
+    display: none;
+  }
+
+  @media (min-width: 64rem) {
+    .video__frame {
+      inline-size: min(90vw, calc((100svh - 8rem) * var(--rw) / var(--rh)));
+    }
+  }
+</style>

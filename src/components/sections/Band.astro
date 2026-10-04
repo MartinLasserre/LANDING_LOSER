@@ -17,7 +17,7 @@ const facts = [
 ].filter((f): f is { label: string; value: string } => f.value !== null);
 ---
 
-<section id="banda" class="band" data-section="banda" data-section-index={copy.index} data-section-label="Banda" data-atmosphere="0.6" aria-labelledby="band-title">
+<section id="banda" class="band" data-section="banda" data-atmosphere="0.6" aria-labelledby="band-title">
   <p class="band__ghost t-display t-outline" aria-hidden="true" data-parallax-x="-0.2">
     {band.nameParts[1]}
   </p>
@@ -34,7 +34,6 @@ const facts = [
     <div class="band__media" data-parallax="-0.1">
       <Photo
         photo={photos.band}
-        figure={copy.index}
         sizes="(min-width: 64rem) 40vw, 82vw"
         data-reveal-clip
       />
@@ -108,9 +107,6 @@ const facts = [
     position: relative;
   }
 
-  .band__media :global(.photo__caption) {
-    padding-inline-end: var(--gutter);
-  }
 
   .band__copy {
     grid-column: 1 / -1;

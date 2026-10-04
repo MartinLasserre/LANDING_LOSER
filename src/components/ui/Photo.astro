@@ -1,26 +1,22 @@
 ---
 /**
- * Fotografía editorial: <picture> optimizado (AVIF/WebP + JPG) con
- * dimensiones intrínsecas (sin CLS) y pie con metadata real.
- * Los campos `null` de la foto (año, lugar, crédito) simplemente no se muestran.
+ * Fotografía: <picture> optimizado (WebP + JPG) con dimensiones intrínsecas
+ * (sin CLS). La <figure> es el contenedor que usa el motion system
+ * (reveal con recorte, cuadros del archivo).
  */
 import { Picture } from 'astro:assets';
 import type { Photo } from '@/types/content';
 
 interface Props {
   photo: Photo;
-  /** Numeración editorial, p. ej. "01". */
-  figure?: string;
   sizes: string;
   priority?: boolean;
-  caption?: boolean;
   class?: string;
   /** Atributos data-* para el motion system. */
   [key: `data-${string}`]: string | boolean | undefined;
 }
 
-const { photo, figure, sizes, priority = false, caption = true, class: className, ...rest } = Astro.props;
-const details = [photo.year, photo.location].filter((v): v is string => v !== null);
+const { photo, sizes, priority = false, class: className, ...rest } = Astro.props;
 ---
 
 <figure class:list={['photo', className]} {...rest}>
@@ -39,16 +35,6 @@ const details = [photo.year, photo.location].filter((v): v is string => v !== nu
       style={photo.focus ? `object-position: ${photo.focus}` : undefined}
     />
   </div>
-  {
-    caption && (
-      <figcaption class="photo__caption t-micro">
-        {figure && <span class="t-num">Fig. {figure}</span>}
-        <span>{photo.caption}</span>
-        {details.map((d) => <span>{d}</span>)}
-        {photo.credit && <span>Foto: {photo.credit}</span>}
-      </figcaption>
-    )
-  }
 </figure>
 
 <style>
@@ -72,12 +58,5 @@ const details = [photo.year, photo.location].filter((v): v is string => v !== nu
   .photo__frame :global(img) {
     object-fit: cover;
     filter: contrast(1.08) saturate(1.05);
-  }
-
-  .photo__caption {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.35em 1.2em;
-    margin-block-start: var(--space-2xs);
   }
 </style>

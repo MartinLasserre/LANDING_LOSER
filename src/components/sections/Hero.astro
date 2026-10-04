@@ -13,7 +13,7 @@ const { band, photos, meta } = siteData;
 const [first, second] = band.nameParts;
 ---
 
-<section id="inicio" class="hero" data-section="inicio" data-section-index="00" data-section-label="Inicio" data-atmosphere="1" aria-labelledby="hero-title" data-hero>
+<section id="inicio" class="hero" data-section="inicio" data-atmosphere="1" aria-labelledby="hero-title" data-hero>
   <div class="hero__texture" aria-hidden="true" data-hero-texture></div>
 
   <div class="hero__media" data-hero-media>
@@ -21,7 +21,6 @@ const [first, second] = band.nameParts;
       photo={photos.hero}
       sizes="(min-width: 64rem) 32vw, (min-width: 48rem) 52vw, 78vw"
       priority
-      caption={false}
       class="hero__photo"
     />
   </div>
@@ -36,12 +35,6 @@ const [first, second] = band.nameParts;
   </h1>
 
   <p class="hero__tagline t-subtitle" data-hero-meta>{band.tagline}</p>
-
-  <p class="hero__fig t-micro" data-hero-meta>
-    <span class="t-num">Fig. 00</span>
-    <span>{photos.hero.caption}</span>
-    <span>En vivo</span>
-  </p>
 
   <p class="hero__vertical t-micro t-vertical" aria-hidden="true" data-hero-meta>
     {meta.description}
@@ -130,15 +123,6 @@ const [first, second] = band.nameParts;
     line-height: 1;
   }
 
-  .hero__fig {
-    position: absolute;
-    inset-inline-end: var(--gutter);
-    inset-block-start: calc(var(--nav-height) + 2svh);
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 0.2em;
-  }
 
   .hero__vertical {
     display: none;
@@ -196,9 +180,6 @@ const [first, second] = band.nameParts;
       inset-block-end: 6svh;
     }
 
-    .hero__fig {
-      inset-block-start: calc(var(--nav-height) + 5svh);
-    }
 
     /* Físicas: con writing-mode vertical las propiedades lógicas rotan. */
     .hero__vertical {

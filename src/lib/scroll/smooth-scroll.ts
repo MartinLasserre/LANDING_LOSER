@@ -9,6 +9,9 @@ export interface SmoothScroll {
   scrollTo(target: ScrollTarget, options?: { immediate?: boolean; onComplete?: () => void }): void;
   /** Suscripción a la velocidad de scroll (px/frame). */
   onVelocity(listener: (velocity: number) => void): () => void;
+  /** Bloquea el scroll de fondo (menú mobile, lightbox). */
+  lock(): void;
+  unlock(): void;
   destroy(): void;
 }
 
@@ -21,6 +24,10 @@ export interface SmoothScroll {
  */
 export function initSmoothScroll({ smooth }: { smooth: boolean }): SmoothScroll {
   const listeners = new Set<(velocity: number) => void>();
+  const root = document.documentElement;
+  const setOverflowLocked = (locked: boolean) => {
+    root.style.overflow = locked ? 'hidden' : '';
+  };
 
   if (!smooth) {
     let lastY = window.scrollY;
@@ -40,6 +47,8 @@ export function initSmoothScroll({ smooth }: { smooth: boolean }): SmoothScroll 
         listeners.add(listener);
         return () => listeners.delete(listener);
       },
+      lock: () => setOverflowLocked(true),
+      unlock: () => setOverflowLocked(false),
       destroy() {
         window.removeEventListener('scroll', onScroll);
         listeners.clear();
@@ -70,6 +79,14 @@ export function initSmoothScroll({ smooth }: { smooth: boolean }): SmoothScroll 
     onVelocity(listener) {
       listeners.add(listener);
       return () => listeners.delete(listener);
+    },
+    lock() {
+      lenis.stop();
+      setOverflowLocked(true);
+    },
+    unlock() {
+      setOverflowLocked(false);
+      lenis.start();
     },
     destroy() {
       gsap.ticker.remove(tick);

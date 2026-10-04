@@ -29,7 +29,7 @@ const ogImage = await getImage({
 });
 
 // JSON-LD MusicGroup: solo datos reales (los `null` se omiten).
-const sameAs = socialLinks.map((l) => l.href).filter((href): href is string => href !== null);
+const sameAs = socialLinks.map((l) => l.href);
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'MusicGroup',

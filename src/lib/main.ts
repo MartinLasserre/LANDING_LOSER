@@ -9,9 +9,13 @@ import { glitchOnce } from '@/lib/animations/glitch';
 import { initPlayer } from '@/lib/audio/player';
 import { prefersReducedMotion, whenIdle, type Cleanup } from '@/lib/env';
 import { initAnchors, restoreHashPosition } from '@/lib/scroll/anchors';
+import { initHeaderState } from '@/lib/scroll/header';
 import { initSections } from '@/lib/scroll/sections';
 import { initSmoothScroll } from '@/lib/scroll/smooth-scroll';
 import { initCopyButtons } from '@/lib/ui/copy';
+import { initLightbox } from '@/lib/ui/lightbox';
+import { initMobileMenu } from '@/lib/ui/mobile-menu';
+import { initFeaturedVideo } from '@/lib/video/featured-video';
 import type { Atmosphere } from '@/lib/webgl/atmosphere';
 import { loadAtmosphere } from '@/lib/webgl';
 
@@ -23,6 +27,7 @@ let disposed = false;
 const scroll = initSmoothScroll({ smooth: !reduced });
 cleanups.push(() => scroll.destroy());
 cleanups.push(initAnchors(scroll));
+cleanups.push(initMobileMenu(scroll));
 
 cleanups.push(
   initMotion({
@@ -38,6 +43,7 @@ cleanups.push(
 );
 
 cleanups.push(initSections(({ atmosphere: intensity }) => atmosphere?.setIntensity(intensity)));
+cleanups.push(initHeaderState());
 
 const band = document.querySelector('meta[property="og:site_name"]')?.getAttribute('content') ?? '';
 cleanups.push(
@@ -47,6 +53,8 @@ cleanups.push(
     onLevel: (level) => atmosphere?.setAudioLevel(level),
   }),
 );
+cleanups.push(initFeaturedVideo());
+cleanups.push(initLightbox(scroll));
 cleanups.push(initCopyButtons());
 
 // Señal para el timeout de seguridad del <head>: el motion system arrancó.

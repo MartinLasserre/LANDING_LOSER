@@ -41,7 +41,7 @@ Escala fluida con `clamp()`/`min()` en `tokens.css` (`--fs-display` … `--fs-mi
 ## Composición
 
 - Grilla de 12 columnas (`.grid-12`) con gutter fluido; mobile tiene su propia composición, no una reducción.
-- Numeración editorial por sección (`01 ──── Banda`), pies de foto tipo `Fig. 02.01`.
+- Numeración editorial por sección (`01 ──── Banda`). Las fotos van limpias, sin pie.
 - Fotos en formato retrato (las originales son 2:3), desplazadas del centro, sangrando fuera del viewport.
 - Capas: atmósfera WebGL → textura → foto → tipografía → grano → UI.
 

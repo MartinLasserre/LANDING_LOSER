@@ -21,7 +21,7 @@ const closing = band.taglines[frames.length] ?? band.closingLine;
 const pad = (n: number) => String(n).padStart(2, '0');
 ---
 
-<section id="archivo" class="archive" data-section="archivo" data-section-index={copy.index} data-section-label="Archivo" data-atmosphere="0.85" aria-labelledby="archive-title">
+<section id="archivo" class="archive" data-section="archivo" data-atmosphere="0.85" aria-labelledby="archive-title">
   <div class="archive__stage" data-archive-stage>
     <header class="archive__head">
       <SectionMeta index={copy.index} label="Rollo 01" />
@@ -35,14 +35,15 @@ const pad = (n: number) => String(n).padStart(2, '0');
           <div class="archive__item" data-archive-item>
             <Photo
               photo={photo}
-              figure={`${copy.index}.${pad(i + 1)}`}
               sizes="(min-width: 64rem) 30rem, (min-width: 48rem) 44vw, 66vw"
               class="archive__frame"
               data-archive-frame
             />
-            <p class="archive__line t-title" data-archive-line>
-              {band.taglines[i] ?? photo.caption}
-            </p>
+            {band.taglines[i] && (
+              <p class="archive__line t-title" data-archive-line>
+                {band.taglines[i]}
+              </p>
+            )}
           </div>
         ))
       }

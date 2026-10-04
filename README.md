@@ -8,8 +8,10 @@ silencio → el nombre → la banda → el archivo de una noche → la música �
 01 Banda       statement que se "lee" con el scroll, foto que sangra fuera del viewport
 02 Archivo     escena pinned: rollo de 3 cuadros → el público inunda la pantalla → bloque negro
 03 Música      player propio (3 tracks)
-04 Shows       cartel de recital (o afiche "Sin fechas" mientras no haya fechas)
-05 Contacto    email + redes
+04 Video       Tempestad en vivo: el cuadro crece con el scroll sobre el título gigante
+05 En vivo     archivo de fechas pasadas: pared de flyers reales + lightbox (se oculta sin fechas)
+06 Shows       próximas fechas, cartel de recital (o afiche "Sin fechas")
+07 Contacto    email, WhatsApp y redes
    Outro       el nombre vuelve a juntarse
 ```
 
@@ -51,33 +53,44 @@ src/
 ├── pages/index.astro              compone la página
 ├── layouts/BaseLayout.astro       <head>: SEO, Open Graph, JSON-LD, fuentes, progressive enhancement
 ├── components/
-│   ├── navigation/SiteHeader      nav fija: sección activa, progreso, control global de audio
-│   ├── sections/                  Hero, Band, Archive, Music, Shows, Contact
+│   ├── navigation/                SiteHeader (wordmark, nav, estado compacto, audio global), MobileMenu (índice a pantalla completa)
+│   ├── sections/                  Hero, Band, Archive, Music, Video, LiveArchive, Shows, Contact
 │   ├── music/MusicPlayer          lista de tracks + deck (HTML semántico; lógica en lib/audio)
 │   ├── layout/SiteFooter          outro
 │   ├── effects/Atmosphere         canvas WebGL (capa 0)
 │   └── ui/                        Photo (figura editorial), SectionMeta (numeración)
 ├── data/site.ts                   ★ fuente única de contenido
+├── data/flyers.ts                 resuelve flyers de src/assets/flyers/ por nombre de archivo
 ├── types/content.ts               tipos del contenido
 ├── lib/
 │   ├── main.ts                    orquestador del cliente
 │   ├── env.ts                     media queries compartidas, helpers
-│   ├── animations/                gsap (registro), hero, reveal, parallax, archive, outro, glitch, index (matchMedia)
-│   ├── scroll/                    smooth-scroll (Lenis), anchors (links #), sections (sección activa)
-│   ├── audio/                     audio-manager, player (UI), visualizer
+│   ├── animations/                gsap (registro), hero, reveal, parallax, archive, video, live-archive, outro, glitch, index (matchMedia)
+│   ├── scroll/                    smooth-scroll (Lenis + bloqueo de scroll), anchors (links #), sections (sección activa), header (estado compacto)
+│   ├── audio/                     audio-manager, player (UI), visualizer, media-focus (una sola fuente sonora)
+│   ├── video/featured-video.ts    video destacado: play propio, fachada de YouTube
 │   ├── webgl/                     atmosphere (Three.js), shaders, index (carga diferida + detección)
 │   ├── content/                   formateo (tiempos, fechas) y reporte de pendientes
-│   └── ui/copy.ts                 botón "copiar email"
+│   └── ui/                        copy (copiar email), mobile-menu, lightbox (flyers)
 ├── styles/                        tokens.css, typography.css, global.css
-└── assets/photos/                 fotos originales (Astro genera WebP/JPG responsive)
+├── assets/photos/                 fotos originales (Astro genera WebP/JPG responsive)
+├── assets/video/                  poster del video destacado
+└── assets/flyers/                 flyers de fechas pasadas
 public/
 ├── audio/track{1,2,3}.mp3
+├── video/tempestad.mp4
 └── favicon.svg
 docs/
 ├── DESIGN.md                      dirección visual y sistema de diseño
 ├── PALETA.md                      paleta extraída de las fotos
 └── explorations/                  prototipos HTML históricos (no forman parte del build)
 ```
+
+## Navegación
+
+- **Desktop/tablet (≥ 768 px):** wordmark LUCKY / LOSERS y el índice numerado. Sobre el hero el header es transparente; al salir pasa a un estado compacto (superficie oscura translúcida, blur leve, filete de 1 px). Es una clase CSS (`.is-compact`) que pone ScrollTrigger (`lib/scroll/header.ts`); la transición la hace CSS.
+- **Mobile:** botón "Menú" que abre un índice a pantalla completa (`MobileMenu.astro` + `lib/ui/mobile-menu.ts`).
+- **Links:** se arman en `site.ts` a partir de lo que existe. Video aparece solo si hay `featuredVideo`. "En vivo" lleva al archivo de fechas pasadas si hay fechas, o a las próximas fechas si no. La numeración es la de cada sección. La sección activa se marca con `aria-current` (número encendido + línea).
 
 ## Progressive enhancement
 
@@ -135,6 +148,7 @@ Es un acento, no un estado: se dispara una vez en la entrada del nombre y en el 
 - **Análisis**: el `AudioContext` + `AnalyserNode` se crea en el primer play (siempre tras un gesto del usuario). Si no hay Web Audio, el player funciona igual.
 - **`player.ts`**: conecta el manager con el HTML (botones reales, `aria-label` dinámico, range de posición accesible con teclado y `aria-valuetext`, anuncios en `role="status"`), con el control global de la nav, con Media Session (controles del sistema / pantalla bloqueada) y avanza solo al siguiente track.
 - **`visualizer.ts`**: forma de onda estilizada propia de cada track que muestra el progreso y respira con el espectro real mientras suena.
+- **`media-focus.ts`**: una sola experiencia sonora en todo el sitio. El player de tracks y el video se registran con su función de pausa; el que empieza a sonar pausa al otro. Por eso Tempestad (MP3) y Tempestad (video) nunca suenan juntos. Con YouTube se usa la API de mensajes del iframe (`pauseVideo` y eventos de estado).
 
 ## Gestión de contenido
 
@@ -143,14 +157,74 @@ Todo el contenido está en **`src/data/site.ts`**, tipado por `src/types/content
 Convención: **`null` = dato real pendiente**. Nunca reemplazarlo por un dato inventado; el sitio sabe mostrar el estado pendiente y `npm run build` lista todo lo que falta:
 
 ```
-[contenido] 20 datos reales pendientes (src/data/site.ts):
+[contenido] 11 datos reales pendientes (src/data/site.ts):
   · band.city
-  · tracks.track-01.title (provisorio: "Pista uno")
-  · contact.email
+  · tracks.track-01.link
+  · contact.booking
   …
 ```
 
-### Fechas (shows)
+### Video destacado (Tempestad)
+
+En `site.ts`, `featuredVideo`. Con `null` la sección Video no se renderiza y sale de la navegación.
+
+**Video propio (actual):**
+
+1. Copiar el archivo a `public/video/` (MP4 H.264/AAC; opcionalmente también un WebM).
+2. Copiar un cuadro como poster a `src/assets/video/` (en macOS: `ffmpeg -ss 27 -i video.mp4 -frames:v 1 -q:v 2 poster.jpg`).
+3. Completar:
+
+```ts
+const featuredVideo: FeaturedVideo | null = {
+  kind: 'local',
+  title: 'Tempestad',
+  sources: [
+    { src: '/video/tempestad.webm', type: 'video/webm' }, // opcional, primero
+    { src: '/video/tempestad.mp4', type: 'video/mp4' },
+  ],
+  poster: tempestadPoster, // import desde src/assets/video/
+  width: 1280,
+  height: 720,
+};
+```
+
+Para que arranque rápido, el MP4 debe tener el índice al principio (`ffmpeg -i in.mp4 -c copy -movflags +faststart out.mp4`; el actual ya lo tiene). El video usa `preload="none"`: no se descarga nada hasta el play.
+
+**YouTube:**
+
+```ts
+const featuredVideo: FeaturedVideo | null = {
+  kind: 'youtube',
+  title: 'Tempestad',
+  videoId: 'ID_DEL_VIDEO', // lo que sigue a watch?v= — siempre explícito
+  // poster: miPoster,    // opcional; si falta, se usa la miniatura de YouTube
+};
+```
+
+Funciona con "fachada": se muestra el poster y el iframe de YouTube (y todo su JavaScript) recién se crea cuando el usuario da play (dominio `youtube-nocookie.com`).
+
+### Fechas pasadas con flyer (En vivo)
+
+1. Copiar el flyer a **`src/assets/flyers/`**. Conviene nombrarlo con fecha y lugar: `2026-05-12-nombre-del-lugar.jpg`. Sirve JPG, PNG o WebP, en la mejor resolución disponible: Astro lo optimiza a WebP de alta calidad (para que el texto se lea) y nunca lo recorta.
+2. Agregar la fecha en `pastShows` (`site.ts`):
+
+```ts
+const pastShows: PastShow[] = [
+  {
+    id: '2026-05-12-nombre-del-lugar',
+    date: '2026-05-12',                      // AAAA-MM-DD; el año agrupa la pared
+    venue: 'Nombre del lugar',
+    city: 'Ciudad',                          // o null
+    flyer: '2026-05-12-nombre-del-lugar.jpg', // nombre del archivo en src/assets/flyers/
+    alt: 'Flyer de Lucky Losers en Nombre del lugar, 12 de mayo de 2026, con Otra Banda',
+    bands: ['Otra Banda'],                   // opcional
+  },
+];
+```
+
+Listo: no hace falta tocar ningún componente. Las fechas se ordenan solas (más reciente primero) y se agrupan por año. Si el nombre del flyer no existe, el build falla con un mensaje que lista los disponibles. Con la lista vacía, la sección En vivo no se muestra y "En vivo" en la navegación lleva a las próximas fechas.
+
+### Próximas fechas (shows)
 
 ```ts
 shows: [
@@ -176,16 +250,16 @@ Los MP3 actuales son de 320 kbps (~24 MB en total). No afectan la carga inicial 
 
 ### Redes sociales
 
-En `socialLinks`, completar `href`. Las que quedan en `null` se muestran como "pronto", sin link. IDs disponibles: `instagram`, `spotify`, `bandcamp`, `youtube`, `soundcloud`, `tiktok`. Las URLs cargadas también alimentan el `sameAs` del JSON-LD.
+`socialLinks` lista solo redes con URL real (hoy: Instagram y YouTube); una red sin URL no se agrega, así nunca hay links vacíos. Para sumar una, agregar `{ id, label, href }` (IDs disponibles: `instagram`, `spotify`, `bandcamp`, `youtube`, `soundcloud`, `tiktok`). Se muestran en Contacto y en el afiche de Shows sin fechas, abren en otra pestaña (`rel="noopener noreferrer"`) y alimentan el `sameAs` del JSON-LD.
 
 ### Contacto
 
-`contact.email`, `contact.booking`, `contact.press`. Con email cargado aparece un link `mailto:` grande y un botón "Copiar email". (El formulario `action="mailto:"` de la v1 se eliminó: dependía de que el visitante tuviera un cliente de correo configurado y enviaba texto plano. No se agregó un servicio de formularios externo.)
+`contact.email`, `contact.whatsapp` (link "click to chat" de `api.whatsapp.com/send`, sin SDK), `contact.booking`, `contact.press`. Con email cargado aparece un link `mailto:` grande y un botón "Copiar email"; WhatsApp va primero en la lista de links externos, junto a las redes. Los campos en `null` no se renderizan. (El formulario `action="mailto:"` de la v1 se eliminó: dependía de que el visitante tuviera un cliente de correo configurado y enviaba texto plano. No se agregó un servicio de formularios externo.)
 
 ### Imágenes
 
 1. Copiar la foto a `src/assets/photos/`.
-2. Importarla en `site.ts` y asignarla en `photos` (`hero`, `band` o `archive`), con `alt` descriptivo, `caption`, y opcionalmente `focus` (`object-position`), `year`, `location`, `credit`.
+2. Importarla en `site.ts` y asignarla en `photos` (`hero`, `band` o `archive`), con `id`, `alt` descriptivo y opcionalmente `focus` (`object-position`). Las fotos se muestran sin pie.
 
 Astro genera WebP + JPG en varios anchos, con dimensiones intrínsecas (sin CLS). La foto del hero se carga con prioridad alta; el resto, lazy.
 
@@ -218,6 +292,9 @@ Medido con throttling tipo Lighthouse mobile (Slow 4G, CPU 4×) sobre el preview
 - Controles reales: `<button>` para play/pausa, `<input type="range">` para la posición.
 - `aria-label` dinámicos en el player, anuncios de estado con `role="status"`, texto alternativo descriptivo en todas las fotos.
 - Interacciones de hover solo como mejora (`@media (hover: hover)`); en touch todo funciona con tap.
+- Menú mobile: `<button>` con `aria-expanded`/`aria-controls`, foco al primer link, resto de la página `inert`, Escape cierra y devuelve el foco, scroll de fondo bloqueado.
+- Lightbox de flyers: `<dialog>` nativo con `showModal()` (fondo inerte, Escape), botón Cerrar, click fuera, scroll bloqueado y foco devuelto al flyer.
+- Video: botón de play real; después del primer play quedan los controles nativos del navegador.
 
 ## Qué cambió respecto de la v1
 

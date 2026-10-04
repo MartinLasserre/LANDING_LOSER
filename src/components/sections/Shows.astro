@@ -21,13 +21,12 @@ const statusLabel: Record<ShowStatus, string> = {
 const rows = [...shows]
   .sort((a, b) => a.date.localeCompare(b.date))
   .map((show) => ({ ...show, when: parseShowDate(show.date, meta.lang) }));
-const follow = socialLinks.filter((l): l is typeof l & { href: string } => l.href !== null);
 ---
 
-<section id="shows" class="shows" data-section="shows" data-section-index={copy.index} data-section-label={copy.title} data-atmosphere="0.5" aria-labelledby="shows-title">
+<section id="shows" class="shows" data-section="shows" data-atmosphere="0.5" aria-labelledby="shows-title">
   <div class="shows__poster wrap">
     <header class="shows__head">
-      <SectionMeta index={copy.index} label="En vivo" />
+      <SectionMeta index={copy.index} label="Próximas fechas" />
       <h2 id="shows-title" class="shows__title t-headline" data-reveal>{copy.title}</h2>
       <p class="shows__intro t-subtitle" data-reveal>{copy.intro}</p>
     </header>
@@ -48,7 +47,7 @@ const follow = socialLinks.filter((l): l is typeof l & { href: string } => l.hre
               <p class="show__venue t-meta">{show.venue}</p>
               <p class="show__action">
                 {show.ticketUrl && show.status === 'available' && !show.when.isPast ? (
-                  <a class="btn" href={show.ticketUrl} target="_blank" rel="noopener">
+                  <a class="btn" href={show.ticketUrl} target="_blank" rel="noopener noreferrer">
                     <span class="btn__label">
                       {statusLabel.available} →
                       <span class="visually-hidden">
@@ -68,14 +67,15 @@ const follow = socialLinks.filter((l): l is typeof l & { href: string } => l.hre
         <div class="shows__empty" data-reveal-group>
           <p class="shows__empty-title t-display">{showsEmpty.title}</p>
           <p class="shows__empty-sub t-meta">{showsEmpty.subtitle}</p>
-          {follow.length > 0 && (
+          {socialLinks.length > 0 && (
             <p class="t-micro shows__follow">
               Novedades en{' '}
-              {follow.map((l, i) => (
+              {socialLinks.map((l, i) => (
                 <>
                   {i > 0 && ' · '}
-                  <a class="link-line" href={l.href} target="_blank" rel="noopener">
+                  <a class="link-line" href={l.href} target="_blank" rel="noopener noreferrer">
                     {l.label}
+                    <span class="visually-hidden"> (abre en otra pestaña)</span>
                   </a>
                 </>
               ))}

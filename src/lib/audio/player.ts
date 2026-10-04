@@ -2,6 +2,7 @@ import { gsap } from '@/lib/animations/gsap';
 import type { Cleanup } from '@/lib/env';
 import { formatTime } from '@/lib/content/format';
 import { AudioManager, type AudioSnapshot, type TrackRef } from './audio-manager';
+import { claimMediaFocus, registerMediaOwner } from './media-focus';
 import { createVisualizer, type Visualizer } from './visualizer';
 
 export interface PlayerOptions {
@@ -120,6 +121,8 @@ export function initPlayer(options: PlayerOptions): Cleanup {
     lastState = state;
 
     if (state === 'playing') {
+      // Si había un video sonando, se pausa: una sola fuente a la vez.
+      claimMediaFocus('tracks');
       visualizer?.start();
       startLevelLoop();
     } else {
@@ -211,8 +214,10 @@ export function initPlayer(options: PlayerOptions): Cleanup {
   }
 
   renderState(audio.snapshot);
+  const offFocus = registerMediaOwner({ id: 'tracks', pause: () => audio.pause() });
 
   return () => {
+    offFocus();
     abort.abort();
     unsubscribe();
     stopLevelLoop();

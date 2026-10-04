@@ -5,6 +5,8 @@ import { initReveals, initScrubText } from './reveal';
 import { initParallax } from './parallax';
 import { initArchive } from './archive';
 import { initOutro } from './outro';
+import { initVideoScene } from './video';
+import { initLiveArchive } from './live-archive';
 
 export interface MotionHooks {
   hero?: HeroHooks;
@@ -33,6 +35,7 @@ export function initMotion(hooks: MotionHooks = {}): Cleanup {
     initHero(hooks.hero);
     initScrubText();
     const offReveals = initReveals();
+    initLiveArchive();
     initOutro();
     return offReveals;
   });
@@ -46,6 +49,7 @@ export function initMotion(hooks: MotionHooks = {}): Cleanup {
       stepVh: desktop ? 0.75 : 0.55,
       ...(hooks.onSceneChange && { onBlackout: hooks.onSceneChange }),
     });
+    initVideoScene({ desktop });
     ScrollTrigger.sort();
     ScrollTrigger.refresh();
   });

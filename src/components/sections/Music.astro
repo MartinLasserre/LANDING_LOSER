@@ -8,7 +8,7 @@ const { sections, tracks } = siteData;
 const copy = sections.music;
 ---
 
-<section id="musica" class="music wrap" data-section="musica" data-section-index={copy.index} data-section-label={copy.title} data-atmosphere="0.7" aria-labelledby="music-title">
+<section id="musica" class="music wrap" data-section="musica" data-atmosphere="0.7" aria-labelledby="music-title">
   <header class="music__head">
     <SectionMeta index={copy.index} label={`${tracks.length} tracks`} />
     <h2 id="music-title" class="music__title t-headline" data-reveal>{copy.title}</h2>

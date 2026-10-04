@@ -1,36 +1,38 @@
 ---
+/**
+ * Header de la banda.
+ * - Arriba de todo: transparente, integrado al hero, wordmark grande.
+ * - Fuera del hero (`.is-compact`, ver lib/scroll/header.ts): superficie oscura
+ *   translúcida, blur leve, filete de 1px y wordmark algo más chico.
+ * - Mobile: el índice se abre a pantalla completa (MobileMenu).
+ * Los links salen de `siteData.navigation`; el activo se marca con
+ * `aria-current` desde lib/scroll/sections.ts.
+ */
 import { siteData } from '@/data/site';
-import type { SectionId } from '@/types/content';
+import MobileMenu from './MobileMenu.astro';
 
-const { band, navigation, sections } = siteData;
-
-const indexByTarget: Partial<Record<SectionId, string>> = {
-  banda: sections.band.index,
-  archivo: sections.archive.index,
-  musica: sections.music.index,
-  shows: sections.shows.index,
-  contacto: sections.contact.index,
-};
+const { band, navigation } = siteData;
 ---
 
 <header class="site-header" data-site-header>
-  <a href="#inicio" class="site-header__logo" aria-label={`${band.name}, volver al inicio`} data-nav-link="inicio">
-    {band.shortName}
+  <a href="#inicio" class="brand" aria-label={`${band.name}, volver al inicio`}>
+    <span class="brand__line">{band.nameParts[0]}</span>
+    <span class="brand__line">{band.nameParts[1]}</span>
   </a>
-
-  <p class="site-header__now t-micro" aria-hidden="true">
-    <span class="t-num" data-nav-now-index>00</span>
-    <span data-nav-now-label>Inicio</span>
-  </p>
 
   <nav class="site-header__nav" aria-label="Principal">
     <ul role="list">
       {
         navigation.map((item) => (
           <li>
-            <a href={`#${item.target}`} class="site-header__link" data-nav-link={item.target}>
+            <a
+              href={`#${item.target}`}
+              class="site-header__link"
+              data-nav-link={item.target}
+              data-nav-sections={[item.target, ...(item.alsoActiveIn ?? [])].join(' ')}
+            >
               <span class="site-header__num t-num" aria-hidden="true">
-                {indexByTarget[item.target]}
+                {item.index}
               </span>
               <span class="site-header__label">{item.label}</span>
             </a>
@@ -46,68 +48,118 @@ const indexByTarget: Partial<Record<SectionId, string>> = {
     <span class="site-header__audio-label t-micro" data-mini-label>Pausa</span>
   </button>
 
+  <button
+    type="button"
+    class="site-header__menu t-meta"
+    data-menu-toggle
+    aria-expanded="false"
+    aria-controls="menu-movil"
+  >
+    <span data-menu-label>Menú</span>
+    <span class="site-header__burger" aria-hidden="true"><i></i><i></i></span>
+  </button>
+
   <span class="site-header__progress" data-nav-progress aria-hidden="true"></span>
 </header>
 
+<MobileMenu />
+
 <style>
   .site-header {
+    --header-h: 5rem;
     position: fixed;
     inset: 0 0 auto;
     z-index: var(--z-nav);
     display: flex;
     align-items: center;
     gap: var(--space-md);
-    block-size: var(--nav-height);
+    block-size: calc(var(--header-h) + env(safe-area-inset-top, 0px));
     padding-inline: var(--gutter);
-    padding-block-start: env(safe-area-inset-top, 0);
+    padding-block-start: env(safe-area-inset-top, 0px);
     color: var(--color-bone);
-    /* Legible sobre fotos y humo sin necesitar un fondo opaco. */
-    mix-blend-mode: difference;
+    background-color: transparent;
+    border-block-end: 1px solid transparent;
+    transition:
+      block-size var(--dur-slow) var(--ease-out),
+      background-color var(--dur-slow) var(--ease-out),
+      border-color var(--dur-slow) var(--ease-out),
+      backdrop-filter var(--dur-slow) var(--ease-out);
   }
 
-  .site-header__logo {
+  /* Estado compacto: fuera del hero. Muy sutil. */
+  .site-header:global(.is-compact) {
+    --header-h: var(--nav-height);
+    background-color: rgb(11 1 1 / 0.62);
+    border-block-end-color: var(--color-line);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+  }
+
+  /* Con el menú abierto el header queda sobre el índice, sin superficie. */
+  .site-header:global(.is-menu-open) {
+    background-color: transparent;
+    border-block-end-color: transparent;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  /* ── Wordmark ────────────────────────────────────── */
+  .brand {
+    display: flex;
+    flex-direction: column;
     font-family: var(--font-display);
     font-weight: 900;
-    font-stretch: 62%;
-    font-size: 1.5rem;
-    line-height: 1;
+    font-stretch: var(--stretch-display);
+    font-size: 1.05rem;
+    line-height: 0.84;
     letter-spacing: -0.02em;
+    text-transform: uppercase;
+    transform-origin: left center;
+    transition: transform var(--dur-slow) var(--ease-out);
   }
 
-  .site-header__now {
-    display: none;
-    gap: 0.75em;
-    color: inherit;
-    opacity: 0.7;
+  .site-header:global(.is-compact) .brand {
+    transform: scale(0.86);
   }
 
+  .brand__line:last-child {
+    padding-inline-start: 0.9em;
+  }
+
+  /* ── Navegación desktop ──────────────────────────── */
   .site-header__nav {
+    display: none;
     margin-inline-start: auto;
   }
 
   .site-header__nav ul {
     display: flex;
-    gap: clamp(0.9rem, 2.4vw, 2.5rem);
+    gap: clamp(1.25rem, 2.6vw, 2.75rem);
   }
 
   .site-header__link {
     position: relative;
     display: inline-flex;
-    align-items: baseline;
-    gap: 0.45em;
+    align-items: flex-start;
+    gap: 0.35em;
     padding-block: 0.75rem;
     font-family: var(--font-mono);
-    font-size: var(--fs-micro);
-    letter-spacing: 0.12em;
+    font-size: var(--fs-meta);
+    letter-spacing: var(--tracking-meta);
     text-transform: uppercase;
   }
 
   .site-header__num {
-    display: none;
-    opacity: 0.55;
+    font-size: 0.6rem;
+    letter-spacing: 0.04em;
+    opacity: 0.5;
+    transform: translateY(-0.35em);
+    transition:
+      color var(--dur-fast),
+      opacity var(--dur-fast);
   }
 
-  /* Indicador de sección activa: línea que se dibuja debajo. */
+  /* Sección activa: el número se enciende y la línea se dibuja. */
   .site-header__link::after {
     content: '';
     position: absolute;
@@ -121,16 +173,24 @@ const indexByTarget: Partial<Record<SectionId, string>> = {
   }
 
   .site-header__link:hover::after,
+  .site-header__link:focus-visible::after,
   .site-header__link[aria-current='true']::after {
     transform: scaleX(1);
     transform-origin: left;
   }
 
+  .site-header__link[aria-current='true'] .site-header__num {
+    color: var(--color-accent);
+    opacity: 1;
+  }
+
+  /* ── Audio global ────────────────────────────────── */
   .site-header__audio {
     display: inline-flex;
     align-items: center;
     gap: 0.5em;
     padding: 0.5rem 0;
+    margin-inline-start: auto;
   }
 
   .site-header__audio[hidden] {
@@ -141,31 +201,86 @@ const indexByTarget: Partial<Record<SectionId, string>> = {
     color: inherit;
   }
 
+  /* ── Botón de menú (mobile) ──────────────────────── */
+  .site-header__menu {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75em;
+    min-block-size: 2.75rem;
+    margin-inline-start: auto;
+    color: var(--color-bone);
+  }
+
+  .site-header__audio:not([hidden]) + .site-header__menu {
+    margin-inline-start: var(--space-sm);
+  }
+
+  .site-header__burger {
+    display: grid;
+    gap: 5px;
+    inline-size: 1.25rem;
+  }
+
+  .site-header__burger i {
+    block-size: 1px;
+    background: currentColor;
+    transition: transform var(--dur-base) var(--ease-out);
+  }
+
+  .site-header__menu[aria-expanded='true'] .site-header__burger i:first-child {
+    transform: translateY(3px) rotate(45deg);
+  }
+
+  .site-header__menu[aria-expanded='true'] .site-header__burger i:last-child {
+    transform: translateY(-3px) rotate(-45deg);
+  }
+
+  /* Sin JS el menú no puede abrirse: se muestran los links en línea. */
+  :global(.no-js) .site-header__menu {
+    display: none;
+  }
+
+  :global(.no-js) .site-header__nav {
+    display: block;
+  }
+
+  :global(.no-js) .site-header__nav ul {
+    flex-wrap: wrap;
+    gap: 0.25rem 1rem;
+  }
+
   .site-header__progress {
     position: absolute;
     inset-inline: 0;
-    bottom: 0;
+    bottom: -1px;
     block-size: 1px;
-    background: currentColor;
-    opacity: 0.5;
+    background: var(--color-bone);
+    opacity: 0.45;
     transform: scaleX(var(--progress, 0));
     transform-origin: left;
   }
 
-  @media (min-width: 48rem) {
-    .site-header__link {
-      font-size: var(--fs-meta);
-      letter-spacing: var(--tracking-meta);
+  @media (max-width: 47.99rem) {
+    .site-header {
+      --header-h: var(--nav-height);
+    }
+
+    .brand {
+      font-size: 0.95rem;
     }
   }
 
-  @media (min-width: 64rem) {
-    .site-header__now {
-      display: inline-flex;
+  @media (min-width: 48rem) {
+    .site-header__nav {
+      display: block;
     }
 
-    .site-header__num {
-      display: inline;
+    .site-header__menu {
+      display: none;
+    }
+
+    .site-header__audio {
+      margin-inline-start: 0;
     }
   }
 

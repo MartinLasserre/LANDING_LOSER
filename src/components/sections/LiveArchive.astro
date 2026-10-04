@@ -1,0 +1,282 @@
+---
+/**
+ * 05 — En vivo. Archivo de conciertos ya realizados: pared de flyers reales,
+ * agrupada por año (derivado de la fecha), con lightbox para leerlos.
+ * Sin fechas cargadas (`siteData.pastShows` vacío) la sección no se renderiza.
+ * Las próximas fechas viven aparte, en Shows.
+ */
+import { Image, getImage } from 'astro:assets';
+import { siteData } from '@/data/site';
+import { flyer } from '@/data/flyers';
+import { parseShowDate } from '@/lib/content/format';
+import SectionMeta from '@/components/ui/SectionMeta.astro';
+
+const { pastShows, sections, meta } = siteData;
+const copy = sections.live;
+
+// Inclinaciones sutiles y deterministas: parecen pegados a mano, sin azar.
+const TILTS = [-1.8, 1.1, -0.7, 1.5, -1.2, 0.6];
+
+const shows = await Promise.all(
+  [...pastShows]
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .map(async (show) => {
+      const image = flyer(show.flyer);
+      // Versión grande para el lightbox: WebP de alta calidad (el texto del flyer tiene que leerse).
+      const full = await getImage({ src: image, width: Math.min(image.width, 1800), format: 'webp', quality: 90 });
+      const when = parseShowDate(show.date, meta.lang);
+      const place = [show.venue, show.city].filter((v): v is string => v !== null).join(', ');
+      return { ...show, image, full, when, place };
+    }),
+);
+
+const years = [...new Set(shows.map((s) => s.when.year))].map((year) => ({
+  year,
+  shows: shows.filter((s) => s.when.year === year),
+}));
+---
+
+{
+  shows.length > 0 && (
+    <section id="en-vivo" class="live wrap" data-section="en-vivo" data-atmosphere="0.55" aria-labelledby="live-title">
+      <header class="live__head">
+        <SectionMeta index={copy.index} label="Archivo de fechas" />
+        <h2 id="live-title" class="live__title t-headline" data-reveal>
+          {copy.title}
+        </h2>
+        <p class="live__intro t-subtitle" data-reveal>
+          {copy.intro}
+        </p>
+      </header>
+
+      {years.map((group) => (
+        <section class="live__year" aria-labelledby={`live-${group.year}`}>
+          <h3 id={`live-${group.year}`} class="live__year-title t-display t-outline">
+            {group.year}
+          </h3>
+
+          <ol class="wall" role="list">
+            {group.shows.map((show, i) => (
+              <li class="flyer" data-flyer style={`--tilt: ${TILTS[i % TILTS.length]}deg`}>
+                <button
+                  type="button"
+                  class="flyer__open"
+                  data-lightbox-open
+                  data-full-src={show.full.src}
+                  data-full-width={show.full.attributes['width']}
+                  data-full-height={show.full.attributes['height']}
+                  data-alt={show.alt}
+                  data-caption={`${show.when.day} ${show.when.month} ${show.when.year} — ${show.place}`}
+                >
+                  <span class="visually-hidden">Ampliar flyer: </span>
+                  <Image
+                    src={show.image}
+                    alt={show.alt}
+                    widths={[320, 480, 720].filter((w) => w <= show.image.width)}
+                    sizes="(min-width: 64rem) 26vw, (min-width: 30rem) 42vw, 78vw"
+                    format="webp"
+                    quality={85}
+                    loading="lazy"
+                    decoding="async"
+                    class="flyer__img"
+                  />
+                </button>
+                <p class="flyer__meta t-meta">
+                  <time datetime={show.date}>
+                    <span aria-hidden="true">
+                      {show.when.day} {show.when.month} {show.when.year}
+                    </span>
+                    <span class="visually-hidden">{show.when.long}</span>
+                  </time>
+                  <span class="flyer__place">{show.place}</span>
+                  {show.bands && show.bands.length > 0 && <span>con {show.bands.join(', ')}</span>}
+                </p>
+              </li>
+            ))}
+          </ol>
+        </section>
+      ))}
+
+      <dialog class="lightbox" data-lightbox aria-label="Flyer ampliado">
+        <button type="button" class="lightbox__close t-meta" data-lightbox-close>
+          Cerrar <span aria-hidden="true">✕</span>
+        </button>
+        <img class="lightbox__img" data-lightbox-img alt="" />
+        <p class="lightbox__caption t-meta" data-lightbox-caption />
+      </dialog>
+    </section>
+  )
+}
+
+<style>
+  .live {
+    position: relative;
+    display: grid;
+    gap: var(--space-lg);
+    padding-block: var(--space-xl);
+  }
+
+  .live__head {
+    display: grid;
+    gap: var(--space-sm);
+  }
+
+  .live__title {
+    font-size: clamp(4rem, 17vw, 17rem);
+    line-height: 0.8;
+  }
+
+  .live__intro {
+    font-stretch: 75%;
+    color: var(--color-glow);
+  }
+
+  .live__year {
+    display: grid;
+    gap: var(--space-md);
+  }
+
+  .live__year-title {
+    font-size: clamp(4rem, 16vw, 14rem);
+    line-height: 0.8;
+  }
+
+  /* ── Pared de flyers ─────────────────────────────── */
+  .wall {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-xl) var(--space-lg);
+    align-items: start;
+  }
+
+  .flyer {
+    position: relative;
+    display: grid;
+    gap: var(--space-xs);
+    inline-size: 82%;
+    rotate: var(--tilt);
+    transition:
+      rotate var(--dur-slow) var(--ease-out),
+      scale var(--dur-slow) var(--ease-out);
+  }
+
+  .flyer:nth-child(even) {
+    justify-self: end;
+  }
+
+  :global(.motion) .flyer {
+    opacity: 0;
+  }
+
+  .flyer__open {
+    display: block;
+    inline-size: 100%;
+    cursor: zoom-in;
+  }
+
+  /* Proporción original del flyer: nunca se recorta. */
+  .flyer__open :global(img) {
+    display: block;
+    inline-size: 100%;
+    block-size: auto;
+  }
+
+  .flyer__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25em 1em;
+    color: var(--color-bone);
+  }
+
+  .flyer__place {
+    color: var(--color-meta);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .flyer:hover,
+    .flyer:focus-within {
+      z-index: 2;
+      rotate: 0deg;
+      scale: 1.03;
+    }
+  }
+
+  @media (min-width: 30rem) {
+    .wall {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .flyer {
+      inline-size: 100%;
+    }
+
+    .flyer:nth-child(even) {
+      margin-block-start: var(--space-xl);
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .wall {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      column-gap: var(--space-xl);
+      padding-inline: 4%;
+    }
+
+    .flyer:nth-child(even) {
+      margin-block-start: 0;
+    }
+
+    /* Composición asimétrica: cada columna arranca a otra altura. */
+    .flyer:nth-child(3n + 2) {
+      margin-block-start: var(--space-2xl);
+    }
+
+    .flyer:nth-child(3n) {
+      margin-block-start: var(--space-lg);
+    }
+  }
+
+  /* ── Lightbox ────────────────────────────────────── */
+  .lightbox {
+    inline-size: 100vw;
+    block-size: 100dvh;
+    max-inline-size: none;
+    max-block-size: none;
+    margin: 0;
+    padding: var(--space-lg) var(--gutter);
+    border: 0;
+    background: transparent;
+    color: var(--color-bone);
+  }
+
+  .lightbox[open] {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    justify-items: center;
+    gap: var(--space-sm);
+  }
+
+  .lightbox::backdrop {
+    background: rgb(11 1 1 / 0.94);
+  }
+
+  .lightbox__close {
+    justify-self: end;
+    min-block-size: 2.75rem;
+    padding-inline: var(--space-sm);
+    color: var(--color-bone);
+  }
+
+  .lightbox__img {
+    max-inline-size: 100%;
+    max-block-size: 100%;
+    inline-size: auto;
+    block-size: auto;
+    object-fit: contain;
+  }
+
+  .lightbox__caption {
+    color: var(--color-bone);
+    text-align: center;
+  }
+</style>
