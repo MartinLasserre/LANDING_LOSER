@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Marco 2: Negativo Oscuro</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;700&display=swap');
+        body, html { margin: 0; padding: 0; background-color: #020000; color: #FF1F1F; font-family: 'Archivo', sans-serif; overflow-x: hidden; }
+        .fondo-humo { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: linear-gradient(45deg, #1a0000, #000000); z-index: -1; }
+        .content { padding: 10vh 5vw; max-width: 800px; margin: 0 auto; text-align: center; }
+        
+        .marco-negativo {
+            display: inline-block;
+            margin: 50px 0;
+            position: relative;
+            background: #000;
+            padding: 10px 10px 40px 10px; /* Como una polaroid oscura */
+            border: 1px solid #111;
+            outline: 1px solid rgba(255, 31, 31, 0.2);
+            outline-offset: -5px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.9);
+        }
+        .marco-negativo::after {
+            content: 'DARKLANDS';
+            position: absolute;
+            bottom: 10px;
+            left: 20px;
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+            color: rgba(255, 31, 31, 0.5);
+        }
+        .marco-negativo img {
+            display: block;
+            max-width: 100%;
+            opacity: 0.85;
+            mix-blend-mode: screen;
+        }
+    </style>
+</head>
+<body>
+    <div class="fondo-humo"></div>
+    <div class="content">
+        <h1>SHOWS</h1>
+        <div class="marco-negativo">
+            <img src="../assets/fotos/foto2.jpg" alt="Foto">
+        </div>
+        <p>Estilo foto impresa quemada, marco grueso oscuro con texto incrustado.</p>
+    </div>
+</body>
+</html>

@@ -1,0 +1,103 @@
+{
+  "meta": {
+    "title": "LUCKY LOSERS",
+    "description": "Ruido, melodía y derrota. Lucky Losers. TODO: ajustar descripción final.",
+    "lang": "es-AR",
+    "canonicalUrl": "TODO: https://dominio-de-la-banda.com",
+    "keywords": ["Lucky Losers", "rock", "noise pop", "feedback", "TODO: géneros/keywords reales"],
+    "og": {
+      "title": "LUCKY LOSERS",
+      "description": "Perdedores con suerte. Volumen alto.",
+      "type": "website",
+      "image": "TODO: ruta o URL de imagen 1200x630",
+      "imageAlt": "TODO: descripción de la imagen",
+      "url": "TODO: https://dominio-de-la-banda.com",
+      "locale": "es_AR"
+    }
+  },
+  "hero": {
+    "name": "LUCKY LOSERS",
+    "tagline": "Ganar es aburrido.",
+    "alternativeTaglines": [
+      "Todo mal. Todo bien.",
+      "Feedback y nada más.",
+      "Perder también es un arte.",
+      "Turn it up. Después, nada."
+    ],
+    "cta": {
+      "label": "Escuchar",
+      "target": "#musica"
+    }
+  },
+  "bio": {
+    "title": "Quiénes",
+    "short": "Ruido. Melodía escondida. Una derrota que suena a victoria. Lucky Losers no explica: suena.",
+    "extra": "TODO: completar con datos reales de la banda (formación, ciudad, año, historia) si el usuario lo desea."
+  },
+  "music": {
+    "title": "Música",
+    "intro": "Escuchá fuerte.",
+    "tracks": [
+      {
+        "title": "TODO: título del track 1",
+        "year": "TODO",
+        "duration": "TODO",
+        "embedUrl": "TODO: URL de embed (Spotify/Bandcamp/SoundCloud)",
+        "link": "TODO: URL del track"
+      },
+      {
+        "title": "TODO: título del track 2",
+        "year": "TODO",
+        "duration": "TODO",
+        "embedUrl": "TODO: URL de embed",
+        "link": "TODO: URL del track"
+      },
+      {
+        "title": "TODO: título del track 3",
+        "year": "TODO",
+        "duration": "TODO",
+        "embedUrl": "TODO: URL de embed",
+        "link": "TODO: URL del track"
+      }
+    ]
+  },
+  "shows": {
+    "title": "Shows",
+    "intro": "Vení. O no.",
+    "events": [
+      {
+        "date": "TODO: AAAA-MM-DD",
+        "venue": "TODO: lugar",
+        "city": "TODO: ciudad",
+        "ticketUrl": "TODO: URL de entradas",
+        "status": "TODO: disponible | agotado | gratis"
+      },
+      {
+        "date": "TODO: AAAA-MM-DD",
+        "venue": "TODO: lugar",
+        "city": "TODO: ciudad",
+        "ticketUrl": "TODO: URL de entradas",
+        "status": "TODO"
+      }
+    ],
+    "empty": "Sin fechas. Por ahora."
+  },
+  "contact": {
+    "title": "Contacto",
+    "text": "Escribinos. Quizás respondamos.",
+    "email": "TODO: email de contacto",
+    "booking": "TODO: email/teléfono de booking",
+    "press": "TODO: email de prensa"
+  },
+  "social": {
+    "instagram": "TODO: https://instagram.com/...",
+    "spotify": "TODO: https://open.spotify.com/artist/...",
+    "bandcamp": "TODO: https://....bandcamp.com",
+    "youtube": "TODO: https://youtube.com/@...",
+    "soundcloud": "TODO: https://soundcloud.com/...",
+    "tiktok": "TODO: https://tiktok.com/@..."
+  },
+  "footer": {
+    "text": "© TODO: año LUCKY LOSERS. Todos los derechos reservados."
+  }
+}

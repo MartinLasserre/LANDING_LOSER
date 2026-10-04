@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Opción 1: Fantasmas al Scroll</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;700&display=swap');
+        body, html {
+            margin: 0; padding: 0; background-color: #050000; color: #FF1F1F;
+            font-family: 'Archivo', sans-serif; overflow-x: hidden;
+        }
+        .fondo-humo {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1;
+            background: radial-gradient(circle at 50% 50%, #2a0000 0%, #000000 100%);
+        }
+        .content { padding: 10vh 5vw; max-width: 1200px; margin: 0 auto; text-align: center; }
+        h1, h2 { font-weight: 700; text-transform: uppercase; letter-spacing: -2px; }
+        .section { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; }
+        
+        .fantasma-img {
+            max-width: 80%; max-height: 70vh; opacity: 0; filter: blur(30px) grayscale(100%) contrast(200%);
+            transform: scale(1.1); transition: opacity 2s ease-out, filter 2s ease-out, transform 2s ease-out;
+            mix-blend-mode: screen; position: absolute; z-index: 0;
+        }
+        .fantasma-img.visible {
+            opacity: 0.4; filter: blur(0px) sepia(1) hue-rotate(-50deg) saturate(5); transform: scale(1);
+        }
+        .text-overlay { position: relative; z-index: 1; text-shadow: 0 0 20px #000; }
+    </style>
+</head>
+<body>
+    <div class="fondo-humo"></div>
+    <div class="content">
+        <div class="section">
+            <img src="../assets/fotos/foto3.jpg" alt="Cantante" class="fantasma-img">
+            <div class="text-overlay"><h2>ESCUCHANOS</h2></div>
+        </div>
+        <div class="section">
+            <img src="../assets/fotos/foto4.jpg" alt="Público" class="fantasma-img">
+            <div class="text-overlay"><h2>SHOWS</h2></div>
+        </div>
+    </div>
+    <script>
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if(entry.isIntersecting) entry.target.classList.add('visible');
+                else entry.target.classList.remove('visible');
+            });
+        }, { threshold: 0.5 });
+        document.querySelectorAll('.fantasma-img').forEach(img => observer.observe(img));
+    </script>
+</body>
+</html>
